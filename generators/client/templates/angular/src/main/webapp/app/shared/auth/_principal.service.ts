@@ -64,11 +64,12 @@ export class Principal {
         if (!this.authenticated) {
            return Observable.of(false);
         }
-
-        return this.identity().map((id) => {
-            return id.authorities && id.authorities.indexOf(authority) !== -1;
-        }, () => {
-            return false;
+        return this.identity().flatMap((id) => {
+            if (id == null) {
+                return Observable.of(false);
+            } else {
+                return Observable.of(id.authorities && id.authorities.indexOf(authority) !== -1);
+            }
         });
     }
 
