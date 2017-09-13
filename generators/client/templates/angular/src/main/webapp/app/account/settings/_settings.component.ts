@@ -40,7 +40,7 @@ export class SettingsComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.principal.identity().then((account) => {
+        this.principal.identity().subscribe((account) => {
             this.settingsAccount = this.copyAccount(account);
         });
         <%_ if (enableTranslation) { _%>
@@ -54,7 +54,7 @@ export class SettingsComponent implements OnInit {
         this.account.save(this.settingsAccount).subscribe(() => {
             this.error = null;
             this.success = 'OK';
-            this.principal.identity(true).then((account) => {
+             this.principal.identity(true).subscribe((account) => {
                 this.settingsAccount = this.copyAccount(account);
             });
             <%_ if (enableTranslation) { _%>

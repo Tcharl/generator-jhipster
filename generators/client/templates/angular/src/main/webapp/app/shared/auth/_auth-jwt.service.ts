@@ -77,9 +77,9 @@ export class AuthServerProvider {
     loginWithToken(jwt, rememberMe) {
         if (jwt) {
             this.storeAuthenticationToken(jwt, rememberMe);
-            return Promise.resolve(jwt);
+            return Observable.of(jwt);
         } else {
-            return Promise.reject('auth-jwt-service Promise reject'); // Put appropriate error message here
+            return Observable.throw('auth-jwt-service Promise reject'); // Put appropriate error message here
         }
     }
 

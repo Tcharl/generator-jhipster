@@ -71,7 +71,7 @@ export class UserMgmtComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        this.principal.identity().then((account) => {
+        this.principal.identity().subscribe((account) => {
             this.currentAccount = account;
             this.loadAll();
             this.registerChangeInUsers();

@@ -18,6 +18,7 @@
 -%>
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
+import { Subscriber } from 'rxjs/Rx';
 import { Subject } from 'rxjs/Subject';
 import { AccountService } from './account.service';
 <%_ if (websocket === 'spring-websocket') { _%>
@@ -41,8 +42,8 @@ export class Principal {
         this.authenticationState.next(this.userIdentity);
     }
 
-    hasAnyAuthority(authorities: string[]): Promise<boolean> {
-        return Promise.resolve(this.hasAnyAuthorityDirect(authorities));
+    hasAnyAuthority(authorities: string[]): Observable<boolean> {
+        return Observable.of(this.hasAnyAuthorityDirect(authorities))
     }
 
     hasAnyAuthorityDirect(authorities: string[]): boolean {
@@ -59,19 +60,19 @@ export class Principal {
         return false;
     }
 
-    hasAuthority(authority: string): Promise<boolean> {
+    hasAuthority(authority: string): Observable<boolean> {
         if (!this.authenticated) {
-           return Promise.resolve(false);
+           return Observable.of(false);
         }
 
-        return this.identity().then((id) => {
-            return Promise.resolve(id.authorities && id.authorities.indexOf(authority) !== -1);
+        return this.identity().map((id) => {
+            return id.authorities && id.authorities.indexOf(authority) !== -1;
         }, () => {
-            return Promise.resolve(false);
+            return false;
         });
     }
 
-    identity(force?: boolean): Promise<any> {
+    identity(force?: boolean): Observable<any> {
         if (force === true) {
             this.userIdentity = undefined;
         }
@@ -79,11 +80,11 @@ export class Principal {
         // check and see if we have retrieved the userIdentity data from the server.
         // if we have, reuse it by immediately resolving
         if (this.userIdentity) {
-            return Promise.resolve(this.userIdentity);
+            return Observable.of(this.userIdentity);
         }
 
         // retrieve the userIdentity data from the server, update the identity object, and then resolve.
-        return this.account.get().toPromise().then((account) => {
+        return Observable.create((observer: Subscriber<any>) => this.account.get().subscribe((account) => {
             if (account) {
                 this.userIdentity = account;
                 this.authenticated = true;
@@ -95,8 +96,9 @@ export class Principal {
                 this.authenticated = false;
             }
             this.authenticationState.next(this.userIdentity);
+            observer.next(this.userIdentity);
             return this.userIdentity;
-        }).catch((err) => {
+        }, (err) => {
             <%_ if (websocket === 'spring-websocket') { _%>
             if (this.trackerService.stompClient && this.trackerService.stompClient.connected) {
                 this.trackerService.disconnect();
@@ -105,8 +107,9 @@ export class Principal {
             this.userIdentity = null;
             this.authenticated = false;
             this.authenticationState.next(this.userIdentity);
+            observer.next(null);
             return null;
-        });
+        }));
     }
 
     isAuthenticated(): boolean {

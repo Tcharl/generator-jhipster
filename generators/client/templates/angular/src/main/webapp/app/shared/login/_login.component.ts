@@ -72,7 +72,7 @@ export class <%=jhiPrefixCapitalized%>LoginModalComponent implements AfterViewIn
             username: this.username,
             password: this.password,
             rememberMe: this.rememberMe
-        }).then(() => {
+        }).subscribe(() => {
             this.authenticationError = false;
             this.activeModal.dismiss('login success');
             if (this.router.url === '/register' || (/activate/.test(this.router.url)) ||
@@ -91,7 +91,7 @@ export class <%=jhiPrefixCapitalized%>LoginModalComponent implements AfterViewIn
             if (redirect) {
                 this.router.navigate([redirect]);
             }
-        }).catch(() => {
+        }, (err) => {
             this.authenticationError = true;
         });
     }

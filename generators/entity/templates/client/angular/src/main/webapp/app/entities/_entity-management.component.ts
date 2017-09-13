@@ -40,7 +40,7 @@ export class <%= entityAngularName %>Component implements OnInit, OnDestroy {
     <%_ } _%>
     ngOnInit() {
         this.loadAll();
-        this.principal.identity().then((account) => {
+        this.principal.identity().subscribe((account) => {
             this.currentAccount = account;
         });
         this.registerChangeIn<%= entityClassPlural %>();

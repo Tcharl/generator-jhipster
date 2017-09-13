@@ -18,7 +18,8 @@
 -%>
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot } from '@angular/router';
-
+import { Observable } from 'rxjs/Observable';
+import { Subscriber } from 'rxjs/Rx';
 import { Principal } from '../';
 import { LoginModalService } from '../login/login-modal.service';
 import { StateStorageService } from './state-storage.service';
@@ -32,7 +33,7 @@ export class UserRouteAccessService implements CanActivate {
                 private stateStorageService: StateStorageService) {
     }
 
-    canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | Promise<boolean> {
+    canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | Observable<boolean> {
 
         const authorities = route.data['authorities'];
         if (!authorities || authorities.length === 0) {
@@ -42,11 +43,12 @@ export class UserRouteAccessService implements CanActivate {
         return this.checkLogin(authorities, state.url);
     }
 
-    checkLogin(authorities: string[], url: string): Promise<boolean> {
+    checkLogin(authorities: string[], url: string): Observable<boolean> {
         const principal = this.principal;
-        return Promise.resolve(principal.identity().then((account) => {
+        return Observable.create((observer:Subscriber<any>) => principal.identity().subscribe((account) => {
 
             if (account && principal.hasAnyAuthorityDirect(authorities)) {
+                observer.next(true);
                 return true;
             }
 
@@ -57,6 +59,7 @@ export class UserRouteAccessService implements CanActivate {
                     this.loginModalService.open();
                 }
             });
+            observer.next(false);
             return false;
         }));
     }

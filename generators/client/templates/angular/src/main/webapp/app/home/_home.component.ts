@@ -46,7 +46,7 @@ export class HomeComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.principal.identity().then((account) => {
+        this.principal.identity().subscribe((account) => {
             this.account = account;
         });
         this.registerAuthenticationSuccess();
@@ -54,7 +54,7 @@ export class HomeComponent implements OnInit {
 
     registerAuthenticationSuccess() {
         this.eventManager.subscribe('authenticationSuccess', (message) => {
-            this.principal.identity().then((account) => {
+           this.principal.identity().subscribe((account) => {
                 this.account = account;
             });
         });

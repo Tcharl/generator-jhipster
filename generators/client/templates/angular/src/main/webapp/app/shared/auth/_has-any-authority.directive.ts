@@ -49,7 +49,7 @@ export class HasAnyAuthorityDirective {
     }
 
     private updateView(): void {
-        this.principal.hasAnyAuthority(this.authorities).then((result) => {
+        this.principal.hasAnyAuthority(this.authorities).subscribe((result) => {
             this.viewContainerRef.clear();
             if (result) {
                 this.viewContainerRef.createEmbeddedView(this.templateRef);
