@@ -85,7 +85,7 @@ export class Principal {
         }
 
         // retrieve the userIdentity data from the server, update the identity object, and then resolve.
-        return Observable.create((observer: Subscriber<any>) => this.account.get().subscribe((account) => {
+        return this.account.get().flatMap((account) => {
             if (account) {
                 this.userIdentity = account;
                 this.authenticated = true;
@@ -97,9 +97,8 @@ export class Principal {
                 this.authenticated = false;
             }
             this.authenticationState.next(this.userIdentity);
-            observer.next(this.userIdentity);
-            return this.userIdentity;
-        }, (err) => {
+            return Observable.of(this.userIdentity);
+        }).onErrorResumeNext((err) => {
             <%_ if (websocket === 'spring-websocket') { _%>
             if (this.trackerService.stompClient && this.trackerService.stompClient.connected) {
                 this.trackerService.disconnect();
@@ -108,9 +107,8 @@ export class Principal {
             this.userIdentity = null;
             this.authenticated = false;
             this.authenticationState.next(this.userIdentity);
-            observer.next(null);
-            return null;
-        }));
+            return Observable.of(null);
+        });
     }
 
     isAuthenticated(): boolean {
