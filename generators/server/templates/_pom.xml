@@ -60,6 +60,10 @@
         <%_ if (serviceDiscoveryType || applicationType === 'gateway' || applicationType === 'microservice' || applicationType === 'uaa') { _%>
         <org.springframework.cloud_spring-cloud_spring-cloud-dependencies.version>Dalston.RELEASE</org.springframework.cloud_spring-cloud_spring-cloud-dependencies.version>
         <%_ } _%>
+        <%_ if (hibernateCache === 'infinispan') { _%>
+        <org.infinispan_infinispan-bom.version>8.2.5.Final</org.infinispan_infinispan-bom.version>
+        <%_ } _%>
+        
     </properties>
 
     <%_ if (serviceDiscoveryType || applicationType === 'gateway' || applicationType === 'microservice' || applicationType === 'uaa' || messageBroker === 'kafka' || hibernateCache === 'infinispan') { _%>
@@ -90,6 +94,14 @@
                 <scope>import</scope>
             </dependency>
             <%_ } _%>
+            <%_ if (hibernateCache === 'infinispan') { _%>
+             <dependency>
+                 <groupId>org.infinispan</groupId>
+                 <artifactId>infinispan-bom</artifactId>
+                 <version>${org.infinispan_infinispan-bom.version}</version>
+                  <type>pom</type>
+                  <scope>import</scope>
+              </dependency>
         </dependencies>
     </dependencyManagement>
 <%_ } _%>
@@ -124,7 +136,7 @@
         </dependency>
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
-            <artifactId>metrics-servlet</artifactId>
+            <artifactId>metrics-servlets</artifactId>
         </dependency>
         <%_ if (databaseType === 'sql') { _%>
         <dependency>
