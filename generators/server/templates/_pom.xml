@@ -1,7 +1,7 @@
 <%#
  Copyright 2013-2017 the original author or authors from the JHipster project.
 
- This file is part of the JHipster project, see https://jhipster.github.io/
+ This file is part of the JHipster project, see http://www.jhipster.tech/
  for more information.
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -383,6 +383,11 @@
         <%_ } _%>
         <%_ if (databaseType === 'mongodb') { _%>
         <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.github.mongobee</groupId>
             <artifactId>mongobee</artifactId>
         </dependency>
@@ -512,6 +517,11 @@
                     <artifactId>spring-boot-starter-tomcat</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.zalando</groupId>
+            <artifactId>problem-spring-web</artifactId>
+            <version>${problem-spring-web.version}</version>
         </dependency>
         <%_ if (websocket === 'spring-websocket') { _%>
         <dependency>
@@ -726,6 +736,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -742,6 +753,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
+
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -775,8 +787,38 @@
             </plugin>
             <plugin>
                 <groupId>com.spotify</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
+                <artifactId>dockerfile-maven-plugin</artifactId>
+
             </plugin>
+            <%_ if (enableSwaggerCodegen) { _%>
+            <plugin>
+                <!--
+                    Plugin that provides API-first development using swagger-codegen to
+                    generate Spring-MVC endpoint stubs at compile time from a swagger definition file
+                -->
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-codegen-maven-plugin</artifactId>
+                <version>${swagger-codegen-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec><%= SERVER_MAIN_RES_DIR %>swagger/api.yml</inputSpec>
+                            <language>spring</language>
+                            <apiPackage><%= packageName %>.web.api</apiPackage>
+                            <modelPackage><%= packageName %>.web.api.model</modelPackage>
+                            <generateSupportingFiles>false</generateSupportingFiles>
+                            <configOptions>
+                                <interfaceOnly>true</interfaceOnly>
+                                <java8>true</java8>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <%_ } _%>
             <!-- jhipster-needle-maven-add-plugin -->
         </plugins>
     </build>
@@ -864,7 +906,15 @@
                         <artifactId>maven-war-plugin</artifactId>
                         <configuration>
                             <%_ if (!skipClient) { _%>
-                            <warSourceDirectory><%= CLIENT_MAIN_SRC_DIR %></warSourceDirectory>
+                            <warSourceDirectory><% if (clientFramework !== 'angular1') { %><%= CLIENT_DIST_DIR %><% } else { %><%= CLIENT_MAIN_SRC_DIR %><% } %></warSourceDirectory>
+                            <webResources>
+                                <resource>
+                                    <directory>src/main/webapp</directory>
+                                    <includes>
+                                        <include>WEB-INF/**</include>
+                                    </includes>
+                                </resource>
+                            </webResources>
                             <%_ } _%>
                         </configuration>
                     </plugin>
@@ -903,6 +953,14 @@
                         <configuration>
                             <%_ if (!skipClient) { _%>
                             <warSourceDirectory><%= CLIENT_DIST_DIR %></warSourceDirectory>
+                            <webResources>
+                                <resource>
+                                    <directory>src/main/webapp</directory>
+                                    <includes>
+                                        <include>WEB-INF/**</include>
+                                    </includes>
+                                </resource>
+                            </webResources>
                             <%_ } _%>
                         </configuration>
                     </plugin>
