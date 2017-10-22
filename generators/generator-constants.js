@@ -50,7 +50,6 @@ const DOCKER_COMPOSE_FORMAT_VERSION = '2';
 const NODE_VERSION = '6.11.1';
 const YARN_VERSION = '0.27.5';
 const NPM_VERSION = '5.3.0';
-const JHIPSTER_SERVER_VERSION = '1.1.9-SNAPSHOT';
 
 // all constants used throughout all generators
 
@@ -150,7 +149,6 @@ const constants = {
     SERVER_MAIN_RES_DIR: `${MAIN_DIR}resources/`,
     SERVER_TEST_SRC_DIR: `${TEST_DIR}java/`,
     SERVER_TEST_RES_DIR: `${TEST_DIR}resources/`,
-    JHIPSTER_SERVER_VERSION,
     // entity related
     SUPPORTED_VALIDATION_RULES,
 

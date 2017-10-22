@@ -51,36 +51,55 @@
 
     <properties>
         <argLine>-Djava.security.egd=file:/dev/./urandom -Xmx256m</argLine>
-        <jhipster.server.version><%= JHIPSTER_SERVER_VERSION %></jhipster.server.version>
-        <io.github.jhipster_jhipster-dependencies.version>${jhipster.server.version}</io.github.jhipster_jhipster-dependencies.version>
-        <!-- Spring properties -->
-        <%_ if (messageBroker === 'kafka') { _%>
-        <org.springframework.cloud_spring-cloud-stream-dependencies.version>Chelsea.SR1</org.springframework.cloud_spring-cloud-stream-dependencies.version>
-        <%_ } _%>
-        <%_ if (serviceDiscoveryType || applicationType === 'gateway' || applicationType === 'microservice' || applicationType === 'uaa') { _%>
-        <org.springframework.cloud_spring-cloud_spring-cloud-dependencies.version>Dalston.RELEASE</org.springframework.cloud_spring-cloud_spring-cloud-dependencies.version>
+        <commons-io.version>2.5</commons-io.version>
+        <commons-lang.version>3.5</commons-lang.version>
+        <mapstruct.version>1.1.0.Final</mapstruct.version>
+        <%_ if (hibernateCache === 'infinispan') { _%>
+        <infinispan-hibernate52.version>5.2.10.Final</infinispan-hibernate52.version>
         <%_ } _%>
         <%_ if (hibernateCache === 'infinispan') { _%>
-        <org.infinispan_infinispan-bom.version>8.2.5.Final</org.infinispan_infinispan-bom.version>
+        <infinispan.version>8.2.5.Final</infinispan.version>
+
         <%_ } _%>
-        
+        <%_ if (hibernateCache === 'ehcache' || hibernateCache === 'hazelcast' || hibernateCache === 'infinispan' || applicationType === 'gateway') { _%>
+        <jcache.version>1.0.0</jcache.version>
+        <%_ } _%>
+        <%_ if (databaseType === 'sql') { _%>
+        <liquibase-hibernate5.version>3.6</liquibase-hibernate5.version>
+        <%_ if (databaseType === 'mongodb') { _%>
+        <guava.version>23.0</guava.version>
+        <%_ } _%>
+        <%_ if (devDatabaseType === 'postgresql' || prodDatabaseType === 'postgresql') { _%>
+        <postgresql.version>9.4.1212</postgresql.version>
+        <%_ } _%>
+        <!-- These remain empty unless the corresponding profile is active -->
+        <profile.no-liquibase />
+        <profile.swagger />
+        <!-- Sonar properties -->
+        <project.testresult.directory>${project.build.directory}/test-results</project.testresult.directory>
+        <run.addResources>false</run.addResources>
+        <scala.version>2.12.1</scala.version>
+        <!-- Spring properties -->
+        <%_ if (messageBroker === 'kafka') { _%>
+        <spring-cloud-stream.version>Chelsea.SR2</spring-cloud-stream.version>
+        <%_ } _%>
+        <%_ if (serviceDiscoveryType || applicationType === 'gateway' || applicationType === 'microservice' || applicationType === 'uaa') { _%>
+        <spring-cloud.version>Dalston.SR2</spring-cloud.version>
+        <%_ } _%>
+        <%_ if (authenticationType === 'oauth2' || authenticationType === 'uaa') { _%>
+        <spring-security-oauth.version>2.0.12.RELEASE</spring-security-oauth.version>
+        <%_ } _%>
+
+        <jhipster-dependencies.version>0.0.5</jhipster-dependencies.version>
     </properties>
 
-    <%_ if (serviceDiscoveryType || applicationType === 'gateway' || applicationType === 'microservice' || applicationType === 'uaa' || messageBroker === 'kafka' || hibernateCache === 'infinispan') { _%>
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>io.github.jhipster</groupId>
-                <artifactId>jhipster-dependencies</artifactId>
-                <version>${io.github.jhipster_jhipster-dependencies.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
             <%_ if (messageBroker === 'kafka') { _%>
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-stream-dependencies</artifactId>
-                <version>${org.springframework.cloud_spring-cloud-stream-dependencies.version}</version>
+                <version>${spring-cloud-stream.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -89,7 +108,7 @@
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${org.springframework.cloud_spring-cloud_spring-cloud-dependencies.version}</version>
+                <version>${spring-cloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -98,19 +117,25 @@
              <dependency>
                  <groupId>org.infinispan</groupId>
                  <artifactId>infinispan-bom</artifactId>
-                 <version>${org.infinispan_infinispan-bom.version}</version>
+                 <version>${infinispan.version}</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
+            <%_ } _%>
+            <dependency>
+                <groupId>io.github.jhipster</groupId>
+                <artifactId>jhipster-dependencies</artifactId>
+                <version>${jhipster-dependencies.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
-<%_ } _%>
 
     <dependencies>
         <dependency>
             <groupId>io.github.jhipster</groupId>
             <artifactId>jhipster</artifactId>
-            <version>${jhipster.server.version}</version>
         </dependency>
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
@@ -133,6 +158,10 @@
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-jvm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-servlet</artifactId>
         </dependency>
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
@@ -401,6 +430,7 @@
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct-jdk8</artifactId>
+            <version>${mapstruct.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -521,7 +551,6 @@
         <dependency>
             <groupId>org.zalando</groupId>
             <artifactId>problem-spring-web</artifactId>
-            <version>${problem-spring-web.version}</version>
         </dependency>
         <%_ if (websocket === 'spring-websocket') { _%>
         <dependency>
@@ -646,20 +675,6 @@
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-classic</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-access</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -1231,7 +1246,7 @@
                 <dependency>
                     <groupId>org.mapstruct</groupId>
                     <artifactId>mapstruct-processor</artifactId>
-                    <version>${org.mapstruct_mapstruct-processor.version}</version>
+                    <version>${mapstruct.version}</version>
                 </dependency>
             </dependencies>
         </profile>
