@@ -18,6 +18,7 @@
  */
 
 const crypto = require('crypto');
+const chalk = require('chalk');
 
 const constants = require('../generator-constants');
 
@@ -48,10 +49,7 @@ function askForServerSideOpts(meta) {
             type: 'input',
             name: 'serverPort',
             validate: input => (/^([0-9]*)$/.test(input) ? true : 'This is not a valid port number.'),
-            message: response => this.getNumberedQuestion(
-                'As you are running in a microservice architecture, on which port would like your server to run? It should be unique to avoid port conflicts.',
-                applicationType === 'gateway' || applicationType === 'microservice' || applicationType === 'uaa'
-            ),
+            message: 'As you are running in a microservice architecture, on which port would like your server to run? It should be unique to avoid port conflicts.',
             default: defaultPort
         },
         {
@@ -59,7 +57,7 @@ function askForServerSideOpts(meta) {
             name: 'packageName',
             validate: input => (/^([a-z_]{1}[a-z0-9_]*(\.[a-z_]{1}[a-z0-9_]*)*)$/.test(input) ?
                 true : 'The package name you have provided is not a valid Java package name.'),
-            message: response => this.getNumberedQuestion('What is your default Java package name?', true),
+            message: 'What is your default Java package name?',
             default: 'com.mycompany.myapp',
             store: true
         },
@@ -67,22 +65,19 @@ function askForServerSideOpts(meta) {
             when: response => applicationType === 'gateway' || applicationType === 'microservice' || applicationType === 'uaa',
             type: 'list',
             name: 'serviceDiscoveryType',
-            message: response => this.getNumberedQuestion(
-                'Do you want to use the JHipster Registry to configure, monitor and scale your microservices and gateways?',
-                applicationType === 'gateway' || applicationType === 'microservice' || applicationType === 'uaa'
-            ),
+            message: 'Which service discovery server do you want to use?',
             choices: [
                 {
                     value: 'eureka',
-                    name: 'Yes'
+                    name: 'JHipster Registry (uses Eureka, provides Spring Cloud Config support and monitoring dashboards)'
                 },
                 {
                     value: 'consul',
-                    name: '[BETA] No, use Consul as an alternative solution (uses Spring Cloud Consul)'
+                    name: 'Consul'
                 },
                 {
                     value: false,
-                    name: 'No'
+                    name: 'No service discovery'
                 }
             ],
             default: 'eureka'
@@ -91,10 +86,7 @@ function askForServerSideOpts(meta) {
             when: response => applicationType === 'monolith',
             type: 'list',
             name: 'serviceDiscoveryType',
-            message: response => this.getNumberedQuestion(
-                'Do you want to use the JHipster Registry to configure, monitor and scale your application?',
-                applicationType === 'monolith'
-            ),
+            message: 'Do you want to use the JHipster Registry to configure, monitor and scale your application?',
             choices: [
                 {
                     value: false,
@@ -111,7 +103,7 @@ function askForServerSideOpts(meta) {
             when: response => applicationType === 'monolith' && response.serviceDiscoveryType !== 'eureka',
             type: 'list',
             name: 'authenticationType',
-            message: response => this.getNumberedQuestion('Which *type* of authentication would you like to use?', applicationType === 'monolith'),
+            message: `Which ${chalk.yellow('*type*')} of authentication would you like to use?`,
             choices: [
                 {
                     value: 'jwt',
@@ -123,7 +115,7 @@ function askForServerSideOpts(meta) {
                 },
                 {
                     value: 'oauth2',
-                    name: 'OAuth2 Authentication (stateless, with an OAuth2 server implementation)'
+                    name: 'OAuth 2.0 / OIDC Authentication (stateful, works with Keycloak and Okta)'
                 }
             ],
             default: 0
@@ -132,10 +124,7 @@ function askForServerSideOpts(meta) {
             when: response => applicationType === 'gateway' || applicationType === 'microservice',
             type: 'list',
             name: 'authenticationType',
-            message: response => this.getNumberedQuestion(
-                'Which *type* of authentication would you like to use?',
-                applicationType === 'gateway' || applicationType === 'microservice'
-            ),
+            message: `Which ${chalk.yellow('*type*')} of authentication would you like to use?`,
             choices: [
                 {
                     value: 'jwt',
@@ -143,7 +132,11 @@ function askForServerSideOpts(meta) {
                 },
                 {
                     value: 'uaa',
-                    name: '[BETA] Authentication with JHipster UAA server (the server must be generated separately)'
+                    name: 'Authentication with JHipster UAA server (the server must be generated separately)'
+                },
+                {
+                    value: 'oauth2',
+                    name: 'OAuth 2.0 / OIDC Authentication (stateful, works with Keycloak and Okta)'
                 }
             ],
             default: 0
@@ -152,10 +145,7 @@ function askForServerSideOpts(meta) {
             when: response => ((applicationType === 'gateway' || applicationType === 'microservice') && response.authenticationType === 'uaa'),
             type: 'input',
             name: 'uaaBaseName',
-            message: response => this.getNumberedQuestion(
-                'What is the folder path of your UAA application?',
-                (applicationType === 'gateway' || applicationType === 'microservice') && response.authenticationType === 'uaa'
-            ),
+            message: 'What is the folder path of your UAA application?',
             default: '../uaa',
             validate: (input) => {
                 const uaaAppData = this.getUaaAppName(input);
@@ -170,10 +160,7 @@ function askForServerSideOpts(meta) {
             when: response => applicationType === 'microservice' || (response.authenticationType === 'uaa' && applicationType === 'gateway'),
             type: 'list',
             name: 'databaseType',
-            message: response => this.getNumberedQuestion(
-                'Which *type* of database would you like to use?',
-                applicationType === 'microservice' || (response.authenticationType === 'uaa' && applicationType === 'gateway')
-            ),
+            message: `Which ${chalk.yellow('*type*')} of database would you like to use?`,
             choices: [
                 {
                     value: 'no',
@@ -198,9 +185,7 @@ function askForServerSideOpts(meta) {
             when: response => response.authenticationType === 'oauth2' && !response.databaseType,
             type: 'list',
             name: 'databaseType',
-            message: response => this.getNumberedQuestion(
-                'Which *type* of database would you like to use?', response.authenticationType === 'oauth2' && !response.databaseType
-            ),
+            message: `Which ${chalk.yellow('*type*')} of database would you like to use?`,
             choices: [
                 {
                     value: 'sql',
@@ -217,7 +202,7 @@ function askForServerSideOpts(meta) {
             when: response => !response.databaseType,
             type: 'list',
             name: 'databaseType',
-            message: response => this.getNumberedQuestion('Which *type* of database would you like to use?', !response.databaseType),
+            message: `Which ${chalk.yellow('*type*')} of database would you like to use?`,
             choices: [
                 {
                     value: 'sql',
@@ -238,7 +223,7 @@ function askForServerSideOpts(meta) {
             when: response => response.databaseType === 'sql',
             type: 'list',
             name: 'prodDatabaseType',
-            message: response => this.getNumberedQuestion('Which *production* database would you like to use?', response.databaseType === 'sql'),
+            message: `Which ${chalk.yellow('*production*')} database would you like to use?`,
             choices: constants.SQL_DB_OPTIONS,
             default: 0
         },
@@ -246,10 +231,7 @@ function askForServerSideOpts(meta) {
             when: response => (response.databaseType === 'sql' && response.prodDatabaseType === 'mysql'),
             type: 'list',
             name: 'devDatabaseType',
-            message: response => this.getNumberedQuestion(
-                'Which *development* database would you like to use?',
-                response.databaseType === 'sql' && response.prodDatabaseType === 'mysql'
-            ),
+            message: `Which ${chalk.yellow('*development*')} database would you like to use?`,
             choices: [
                 {
                     value: 'h2Disk',
@@ -270,9 +252,7 @@ function askForServerSideOpts(meta) {
             when: response => (response.databaseType === 'sql' && response.prodDatabaseType === 'mariadb'),
             type: 'list',
             name: 'devDatabaseType',
-            message: response => this.getNumberedQuestion(
-                'Which *development* database would you like to use?', response.databaseType === 'sql' && response.prodDatabaseType === 'mariadb'
-            ),
+            message: `Which ${chalk.yellow('*development*')} database would you like to use?`,
             choices: [
                 {
                     value: 'h2Disk',
@@ -293,10 +273,7 @@ function askForServerSideOpts(meta) {
             when: response => (response.databaseType === 'sql' && response.prodDatabaseType === 'postgresql'),
             type: 'list',
             name: 'devDatabaseType',
-            message: response => this.getNumberedQuestion(
-                'Which *development* database would you like to use?',
-                response.databaseType === 'sql' && response.prodDatabaseType === 'postgresql'
-            ),
+            message: `Which ${chalk.yellow('*development*')} database would you like to use?`,
             choices: [
                 {
                     value: 'h2Disk',
@@ -317,10 +294,7 @@ function askForServerSideOpts(meta) {
             when: response => (response.databaseType === 'sql' && response.prodDatabaseType === 'oracle'),
             type: 'list',
             name: 'devDatabaseType',
-            message: response => this.getNumberedQuestion(
-                'Which *development* database would you like to use?',
-                response.databaseType === 'sql' && response.prodDatabaseType === 'oracle'
-            ),
+            message: `Which ${chalk.yellow('*development*')} database would you like to use?`,
             choices: [
                 {
                     value: 'h2Disk',
@@ -341,10 +315,7 @@ function askForServerSideOpts(meta) {
             when: response => (response.databaseType === 'sql' && response.prodDatabaseType === 'mssql'),
             type: 'list',
             name: 'devDatabaseType',
-            message: response => this.getNumberedQuestion(
-                'Which *development* database would you like to use?',
-                response.databaseType === 'sql' && response.prodDatabaseType === 'mssql'
-            ),
+            message: `Which ${chalk.yellow('*development*')} database would you like to use?`,
             choices: [
                 {
                     value: 'h2Disk',
@@ -365,7 +336,7 @@ function askForServerSideOpts(meta) {
             when: response => (response.databaseType === 'sql' && applicationType !== 'gateway'),
             type: 'list',
             name: 'hibernateCache',
-            message: response => this.getNumberedQuestion('Do you want to use Hibernate 2nd level cache?', response.databaseType === 'sql'),
+            message: 'Do you want to use Hibernate 2nd level cache?',
             choices: [
                 {
                     value: 'ehcache',
@@ -389,7 +360,7 @@ function askForServerSideOpts(meta) {
         {
             type: 'list',
             name: 'buildTool',
-            message: response => this.getNumberedQuestion('Would you like to use Maven or Gradle for building the backend?', true),
+            message: 'Would you like to use Maven or Gradle for building the backend?',
             choices: [
                 {
                     value: 'maven',
@@ -414,7 +385,7 @@ function askForServerSideOpts(meta) {
 
         // JWT authentication is mandatory with Eureka, so the JHipster Registry
         // can control the applications
-        if (this.serviceDiscoveryType === 'eureka' && this.authenticationType !== 'uaa') {
+        if (this.serviceDiscoveryType === 'eureka' && this.authenticationType !== 'uaa' && this.authenticationType !== 'oauth2') {
             this.authenticationType = 'jwt';
         }
 
@@ -426,8 +397,8 @@ function askForServerSideOpts(meta) {
             this.jwtSecretKey = crypto.randomBytes(20).toString('hex');
         }
 
-        // this will be handled by the UAA app
-        if (this.applicationType === 'gateway' && this.authenticationType === 'uaa') {
+        // user-management will be handled by UAA app, oauth expects users to be managed in IpP
+        if ((this.applicationType === 'gateway' && this.authenticationType === 'uaa') || this.authenticationType === 'oauth2') {
             this.skipUserManagement = true;
         }
 
@@ -476,55 +447,43 @@ function askForOptionalItems(meta) {
     const choices = [];
     const defaultChoice = [];
     if (this.databaseType !== 'cassandra' && applicationType === 'monolith' && (this.authenticationType === 'session' || this.authenticationType === 'jwt')) {
-        choices.push(
-            {
-                name: 'Social login (Google, Facebook, Twitter)',
-                value: 'enableSocialSignIn:true'
-            }
-        );
+        choices.push({
+            name: 'Social login (Google, Facebook, Twitter)',
+            value: 'enableSocialSignIn:true'
+        });
     }
     if (this.databaseType === 'sql') {
-        choices.push(
-            {
-                name: 'Search engine using Elasticsearch',
-                value: 'searchEngine:elasticsearch'
-            }
-        );
+        choices.push({
+            name: 'Search engine using Elasticsearch',
+            value: 'searchEngine:elasticsearch'
+        });
     }
     if ((applicationType === 'monolith' || applicationType === 'gateway') &&
             (this.hibernateCache === 'no' || this.hibernateCache === 'hazelcast')) {
-        choices.push(
-            {
-                name: 'Clustered HTTP sessions using Hazelcast',
-                value: 'clusteredHttpSession:hazelcast'
-            }
-        );
+        choices.push({
+            name: 'Clustered HTTP sessions using Hazelcast',
+            value: 'clusteredHttpSession:hazelcast'
+        });
     }
     if (applicationType === 'monolith' || applicationType === 'gateway') {
-        choices.push(
-            {
-                name: 'WebSockets using Spring Websocket',
-                value: 'websocket:spring-websocket'
-            }
-        );
+        choices.push({
+            name: 'WebSockets using Spring Websocket',
+            value: 'websocket:spring-websocket'
+        });
     }
-    choices.push(
-        {
-            name: 'API first development using swagger-codegen',
-            value: 'enableSwaggerCodegen:true'
-        }
-    );
-    choices.push(
-        {
-            name: '[BETA] Asynchronous messages using Apache Kafka',
-            value: 'messageBroker:kafka'
-        }
-    );
+    choices.push({
+        name: 'API first development using swagger-codegen',
+        value: 'enableSwaggerCodegen:true'
+    });
+    choices.push({
+        name: 'Asynchronous messages using Apache Kafka',
+        value: 'messageBroker:kafka'
+    });
 
     const PROMPTS = {
         type: 'checkbox',
         name: 'serverSideOptions',
-        message: response => this.getNumberedQuestion('Which other technologies would you like to use?', true),
+        message: 'Which other technologies would you like to use?',
         choices,
         default: defaultChoice
     };

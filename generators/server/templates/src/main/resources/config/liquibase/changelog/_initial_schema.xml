@@ -56,59 +56,67 @@
         The initial schema has the '00000000000001' id, so that it is over-written if we re-generate it.
     -->
     <changeSet id="00000000000001" author="jhipster">
-<%_ if (!skipUserManagement) { _%>
-        <createTable tableName="jhi_user">
+<%_ if (!skipUserManagement || authenticationType === 'oauth2') { _%>
+    <%_ if (authenticationType !== 'oauth2' || (authenticationType === 'oauth2' && applicationType === 'monolith')) { _%>
+        <createTable tableName="<%= jhiTablePrefix %>_user">
             <column name="id" type="bigint" autoIncrement="${autoIncrement}">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="login" type="varchar(<% if (enableSocialSignIn) { %>100<% } else { %>50<% } %>)">
-                <constraints unique="true" nullable="false"/>
+                <constraints unique="true" nullable="false" uniqueConstraintName="ux_user_login"/>
             </column>
+            <%_ if (authenticationType !== 'oauth2') { _%>
             <column name="password_hash" type="varchar(60)"/>
+            <%_ } _%>
             <column name="first_name" type="varchar(50)"/>
             <column name="last_name" type="varchar(50)"/>
             <column name="email" type="varchar(100)">
-                <constraints unique="true" nullable="true"/>
+                <constraints unique="true" nullable="true" uniqueConstraintName="ux_user_email"/>
             </column>
             <column name="image_url" type="varchar(256)"/>
             <column name="activated" type="boolean" valueBoolean="false">
                 <constraints nullable="false" />
             </column>
-            <column name="lang_key" type="varchar(5)"/>
+            <column name="lang_key" type="varchar(6)"/>
+            <%_ if (authenticationType !== 'oauth2') { _%>
             <column name="activation_key" type="varchar(20)"/>
             <column name="reset_key" type="varchar(20)"/>
+            <%_ } _%>
             <column name="created_by" type="varchar(50)">
                 <constraints nullable="false"/>
             </column>
             <column name="created_date" type="timestamp" defaultValueDate="${now}">
                 <constraints nullable="false"/>
             </column>
+            <%_ if (authenticationType !== 'oauth2') { _%>
             <column name="reset_date" type="timestamp">
                 <constraints nullable="true"/>
             </column>
+            <%_ } _%>
             <column name="last_modified_by" type="varchar(50)"/>
             <column name="last_modified_date" type="timestamp"/>
         </createTable>
     <%_ if (prodDatabaseType !== 'oracle') { _%>
         <createIndex indexName="idx_user_login"
-            tableName="jhi_user"
+            tableName="<%= jhiTablePrefix %>_user"
             unique="true">
             <column name="login" type="varchar(<% if (enableSocialSignIn) { %>100<% } else { %>50<% } %>)"/>
         </createIndex>
 
         <createIndex indexName="idx_user_email"
-            tableName="jhi_user"
+            tableName="<%= jhiTablePrefix %>_user"
             unique="true">
             <column name="email" type="varchar(100)"/>
         </createIndex>
     <%_ } _%>
-        <createTable tableName="jhi_authority">
+    <%_ } _%>
+        <createTable tableName="<%= jhiTablePrefix %>_authority">
             <column name="name" type="varchar(50)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
         </createTable>
 
-        <createTable tableName="jhi_user_authority">
+        <createTable tableName="<%= jhiTablePrefix %>_user_authority">
             <column name="user_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
@@ -117,10 +125,10 @@
             </column>
         </createTable>
 
-        <addPrimaryKey columnNames="user_id, authority_name" tableName="jhi_user_authority"/>
+        <addPrimaryKey columnNames="user_id, authority_name" tableName="<%= jhiTablePrefix %>_user_authority"/>
     <%_ if (authenticationType === 'session') { _%>
 
-        <createTable tableName="jhi_persistent_token">
+        <createTable tableName="<%= jhiTablePrefix %>_persistent_token">
             <column name="series" type="varchar(20)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -135,43 +143,45 @@
     <%_ } _%>
 
         <addForeignKeyConstraint baseColumnNames="authority_name"
-                                 baseTableName="jhi_user_authority"
+                                 baseTableName="<%= jhiTablePrefix %>_user_authority"
                                  constraintName="fk_authority_name"
                                  referencedColumnNames="name"
-                                 referencedTableName="jhi_authority"/>
-
+                                 referencedTableName="<%= jhiTablePrefix %>_authority"/>
+        <%_ if (authenticationType !== 'oauth2') { _%>
         <addForeignKeyConstraint baseColumnNames="user_id"
-                                 baseTableName="jhi_user_authority"
+                                 baseTableName="<%= jhiTablePrefix %>_user_authority"
                                  constraintName="fk_user_id"
                                  referencedColumnNames="id"
-                                 referencedTableName="jhi_user"/>
+                                 referencedTableName="<%= jhiTablePrefix %>_user"/>
+        <%_ } _%>
     <%_ if (authenticationType === 'session') { _%>
 
         <addForeignKeyConstraint baseColumnNames="user_id"
-                                 baseTableName="jhi_persistent_token"
+                                 baseTableName="<%= jhiTablePrefix %>_persistent_token"
                                  constraintName="fk_user_persistent_token"
                                  referencedColumnNames="id"
-                                 referencedTableName="jhi_user"/>
+                                 referencedTableName="<%= jhiTablePrefix %>_user"/>
     <%_ } _%>
+    <%_ if (authenticationType !== 'oauth2' || (authenticationType === 'oauth2' && applicationType === 'monolith')) { _%>
         <<% if (devDatabaseType === 'mssql' || prodDatabaseType === 'mssql') { %>ext:<% } %>loadData encoding="UTF-8"
                   file="config/liquibase/users.csv"
                   separator=";"
                   <%_ if (devDatabaseType === 'mssql' || prodDatabaseType === 'mssql') { _%>
                   identityInsertEnabled="true"
                   <%_ } _%>
-                  tableName="jhi_user">
+                  tableName="<%= jhiTablePrefix %>_user">
             <column name="activated" type="boolean"/>
             <column name="created_date" type="timestamp"/>
         </<% if (devDatabaseType === 'mssql' || prodDatabaseType === 'mssql') { %>ext:<% } %>loadData>
-        <dropDefaultValue tableName="jhi_user" columnName="created_date" columnDataType="datetime"/>
-
+        <dropDefaultValue tableName="<%= jhiTablePrefix %>_user" columnName="created_date" columnDataType="datetime"/>
+    <%_ } _%>
         <<% if (devDatabaseType === 'mssql' || prodDatabaseType === 'mssql') { %>ext:<% } %>loadData encoding="UTF-8"
                   file="config/liquibase/authorities.csv"
                   separator=";"
                   <%_ if (devDatabaseType === 'mssql' || prodDatabaseType === 'mssql') { _%>
                   identityInsertEnabled="true"
                   <%_ } _%>
-                  tableName="jhi_authority"/>
+                  tableName="<%= jhiTablePrefix %>_authority"/>
 
         <<% if (devDatabaseType === 'mssql' || prodDatabaseType === 'mssql') { %>ext:<% } %>loadData encoding="UTF-8"
                   file="config/liquibase/users_authorities.csv"
@@ -179,9 +189,9 @@
                   <%_ if (devDatabaseType === 'mssql' || prodDatabaseType === 'mssql') { _%>
                   identityInsertEnabled="true"
                   <%_ } _%>
-                  tableName="jhi_user_authority"/>
+                  tableName="<%= jhiTablePrefix %>_user_authority"/>
 <%_ } _%>
-        <createTable tableName="jhi_persistent_audit_event">
+        <createTable tableName="<%= jhiTablePrefix %>_persistent_audit_event">
             <column name="event_id" type="bigint" autoIncrement="${autoIncrement}">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -192,7 +202,7 @@
             <column name="event_type" type="varchar(255)"/>
         </createTable>
 
-        <createTable tableName="jhi_persistent_audit_evt_data">
+        <createTable tableName="<%= jhiTablePrefix %>_persistent_audit_evt_data">
             <column name="event_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
@@ -201,30 +211,30 @@
             </column>
             <column name="value" type="varchar(255)"/>
         </createTable>
-        <addPrimaryKey columnNames="event_id, name" tableName="jhi_persistent_audit_evt_data"/>
+        <addPrimaryKey columnNames="event_id, name" tableName="<%= jhiTablePrefix %>_persistent_audit_evt_data"/>
 
         <createIndex indexName="idx_persistent_audit_event"
-                     tableName="jhi_persistent_audit_event"
+                     tableName="<%= jhiTablePrefix %>_persistent_audit_event"
                      unique="false">
             <column name="principal" type="varchar(<% if (enableSocialSignIn) { %>100<% } else { %>50<% } %>)"/>
             <column name="event_date" type="timestamp"/>
         </createIndex>
 
         <createIndex indexName="idx_persistent_audit_evt_data"
-                     tableName="jhi_persistent_audit_evt_data"
+                     tableName="<%= jhiTablePrefix %>_persistent_audit_evt_data"
                      unique="false">
             <column name="event_id" type="bigint"/>
         </createIndex>
 
         <addForeignKeyConstraint baseColumnNames="event_id"
-                                 baseTableName="jhi_persistent_audit_evt_data"
+                                 baseTableName="<%= jhiTablePrefix %>_persistent_audit_evt_data"
                                  constraintName="fk_evt_pers_audit_evt_data"
                                  referencedColumnNames="event_id"
-                                 referencedTableName="jhi_persistent_audit_event"/>
+                                 referencedTableName="<%= jhiTablePrefix %>_persistent_audit_event"/>
     <%_ if (enableSocialSignIn) { _%>
 
         <!-- Social -->
-        <createTable tableName="jhi_social_user_connection">
+        <createTable tableName="<%= jhiTablePrefix %>_social_user_connection">
             <column name="id" type="bigint" autoIncrement="${autoIncrement}">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -251,90 +261,9 @@
             <column name="expire_time" type="bigint"/>
         </createTable>
 
-        <addUniqueConstraint tableName="jhi_social_user_connection" columnNames="user_id, provider_id, provider_user_id"/>
+        <addUniqueConstraint tableName="<%= jhiTablePrefix %>_social_user_connection" columnNames="user_id, provider_id, provider_user_id"/>
 
-        <addUniqueConstraint tableName="jhi_social_user_connection" columnNames="user_id, provider_id, rank"/>
+        <addUniqueConstraint tableName="<%= jhiTablePrefix %>_social_user_connection" columnNames="user_id, provider_id, rank"/>
     <%_ } _%>
     </changeSet>
-
-    <%_ if (authenticationType === 'oauth2') { _%>
-    <!-- Manage the OAuth authentication -->
-    <changeSet id="00000000000002" author="jhipster">
-        <createTable tableName="oauth_client_details">
-            <column name="client_id" type="varchar(255)">
-                <constraints nullable="false" primaryKey="true"/>
-            </column>
-            <column name="resource_ids" type="varchar(255)"/>
-            <column name="client_secret" type="varchar(255)"/>
-            <column name="scope" type="varchar(255)"/>
-            <column name="authorized_grant_types" type="varchar(255)"/>
-            <column name="web_server_redirect_uri" type="varchar(255)"/>
-            <column name="authorities" type="varchar(255)"/>
-            <column name="access_token_validity" type="INT"/>
-            <column name="refresh_token_validity" type="INT"/>
-            <column name="additional_information" type="VARCHAR(4000)"/>
-            <column name="autoapprove" type="VARCHAR(4000)"/>
-        </createTable>
-
-        <createTable tableName="oauth_client_token">
-            <column name="token_id" type="varchar(255)"/>
-            <column name="token" type="<% if (prodDatabaseType === 'postgresql') { %>LONG<% } %>BLOB"/>
-            <column name="authentication_id" type="varchar(255)"/>
-            <column name="user_name" type="varchar(50)"/>
-            <column name="client_id" type="varchar(255)"/>
-        </createTable>
-
-        <addForeignKeyConstraint baseColumnNames="user_name"
-            baseTableName="oauth_client_token"
-            constraintName="fk_oauth_client_token_username"
-            referencedColumnNames="login"
-            referencedTableName="jhi_user"/>
-
-        <createTable tableName="oauth_access_token">
-            <column name="token_id" type="varchar(255)"/>
-            <column name="token" type="<% if (prodDatabaseType === 'postgresql') { %>LONG<% } %>BLOB"/>
-            <column name="authentication_id" type="varchar(255)">
-                 <constraints nullable="false" primaryKey="true"/>
-            </column>
-            <column name="user_name" type="varchar(50)"/>
-            <column name="client_id" type="varchar(255)"/>
-            <column name="authentication" type="<% if (prodDatabaseType === 'postgresql') { %>LONG<% } %>BLOB"/>
-            <column name="refresh_token" type="varchar(255)"/>
-        </createTable>
-
-        <addForeignKeyConstraint baseColumnNames="user_name"
-            baseTableName="oauth_access_token"
-            constraintName="fk_oauth_access_token_username"
-            referencedColumnNames="login"
-            referencedTableName="jhi_user"/>
-
-        <createTable tableName="oauth_refresh_token">
-            <column name="token_id" type="varchar(255)"/>
-            <column name="token" type="<% if (prodDatabaseType === 'postgresql') { %>LONG<% } %>BLOB"/>
-            <column name="authentication" type="<% if (prodDatabaseType === 'postgresql') { %>LONG<% } %>BLOB"/>
-        </createTable>
-
-        <createTable tableName="oauth_code">
-            <column name="code" type="varchar(255)"/>
-            <column name="authentication" type="<% if (prodDatabaseType === 'postgresql') { %>LONG<% } %>BLOB"/>
-        </createTable>
-
-        <createTable tableName="oauth_approvals">
-            <column name="userId" type="varchar(255)"/>
-            <column name="clientId" type="varchar(255)"/>
-            <column name="scope" type="varchar(255)"/>
-            <column name="status" type="varchar(255)"/>
-            <column name="expiresAt" type="timestamp"/>
-            <column name="lastModifiedAt" type="timestamp"/>
-        </createTable>
-
-        <<% if (devDatabaseType === 'mssql' || prodDatabaseType === 'mssql') { %>ext:<% } %>loadData encoding="UTF-8"
-                  file="config/liquibase/oauth_client_details.csv"
-                  separator=";"
-                  <%_ if (devDatabaseType === 'mssql' || prodDatabaseType === 'mssql') { _%>
-                  identityInsertEnabled="true"
-                  <%_ } _%>
-                  tableName="oauth_client_details"/>
-    </changeSet>
-    <%_ } _%>
 </databaseChangeLog>

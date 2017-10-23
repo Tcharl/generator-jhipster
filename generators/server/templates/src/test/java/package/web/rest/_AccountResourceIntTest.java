@@ -17,9 +17,167 @@
  limitations under the License.
 -%>
 package <%=packageName%>.web.rest;
+<%_ if (authenticationType === 'oauth2') { _%>
+
+<%_ if (databaseType === 'cassandra') { _%>
+import <%=packageName%>.AbstractCassandraTest;
+<%_ } _%>
+import <%=packageName%>.<%= mainClass %>;
+    <%_ if (applicationType === 'monolith') { _%>
+import <%=packageName%>.domain.Authority;
+import <%=packageName%>.domain.User;
+import <%=packageName%>.repository.UserRepository;
+import <%=packageName%>.security.AuthoritiesConstants;
+import <%=packageName%>.service.UserService;
+    <%_ } _%>
+import <%=packageName%>.web.rest.errors.ExceptionTranslator;
+
+    <%_ if (applicationType === 'monolith') { _%>
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+    <%_ } _%>
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+    <%_ if (applicationType === 'monolith') { _%>
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+    <%_ } _%>
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+    <%_ if (applicationType === 'monolith') { _%>
+
+import java.util.HashSet;
+import java.util.Set;
+    <%_ } _%>
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+    <%_ if (applicationType === 'monolith') { _%>
+import org.springframework.transaction.annotation.Transactional;
+    <%_ } _%>
+import org.springframework.web.context.WebApplicationContext;
+
+/**
+ * Test class for the AccountResource REST controller.
+ *
+ * @see AccountResource
+ */
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = <%= mainClass %>.class)
+public class AccountResourceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
+    <%_ if (applicationType === 'monolith') { _%>
+
+    @Autowired
+    private UserRepository userRepository;
+    <%_ } _%>
+
+    @Autowired
+    private ExceptionTranslator exceptionTranslator;
+    <%_ if (applicationType === 'monolith') { _%>
+
+    @Autowired
+    private UserService userService;
+    <%_ } _%>
+
+    private MockMvc restUserMockMvc;
+
+    @Autowired
+    private WebApplicationContext context;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+        AccountResource accountUserMockResource =
+        <%_ if (applicationType === 'monolith') { _%>
+            new AccountResource(userRepository, userService);
+        <%_ } else { _%>
+            new AccountResource();
+        <%_ } _%>
+
+        this.restUserMockMvc = MockMvcBuilders.standaloneSetup(accountUserMockResource)
+            .setControllerAdvice(exceptionTranslator)
+            .build();
+    }
+
+    @Test
+    public void testNonAuthenticatedUser() throws Exception {
+        restUserMockMvc.perform(get("/api/authenticate")
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(content().string(""));
+    }
+
+    @Test
+    public void testAuthenticatedUser() throws Exception {
+        restUserMockMvc.perform(get("/api/authenticate")
+            .with(request -> {
+                request.setRemoteUser("test");
+                return request;
+            })
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(content().string("test"));
+    }
+    <%_ if (applicationType === 'monolith') { _%>
+
+    @Test
+    @Transactional
+    public void testGetExistingAccount() throws Exception {
+        Set<Authority> authorities = new HashSet<>();
+        Authority authority = new Authority();
+        authority.setName(AuthoritiesConstants.ADMIN);
+        authorities.add(authority);
+
+        User user = new User();
+        user.setLogin("test");
+        user.setFirstName("john");
+        user.setLastName("doe");
+        user.setEmail("john.doe@jhipster.com");
+        user.setImageUrl("http://placehold.it/50x50");
+        user.setLangKey("en");
+        user.setAuthorities(authorities);
+        userRepository.save(user);
+
+        // create security-aware mockMvc
+        restUserMockMvc = MockMvcBuilders
+            .webAppContextSetup(context)
+            .apply(springSecurity())
+            .build();
+
+        restUserMockMvc.perform(get("/api/account")
+            .with(user(user.getLogin()).roles("ADMIN"))
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.login").value("test"))
+            .andExpect(jsonPath("$.firstName").value("john"))
+            .andExpect(jsonPath("$.lastName").value("doe"))
+            .andExpect(jsonPath("$.email").value("john.doe@jhipster.com"))
+            .andExpect(jsonPath("$.imageUrl").value("http://placehold.it/50x50"))
+            .andExpect(jsonPath("$.langKey").value("en"))
+            .andExpect(jsonPath("$.authorities").value(AuthoritiesConstants.ADMIN));
+    }
+
+    @Test
+    public void testGetUnknownAccount() throws Exception {
+        restUserMockMvc.perform(get("/api/account")
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isInternalServerError());
+    }
+    <%_ } _%>
+}
+<%_ } else { _%>
+
 import <%=packageName%>.config.Constants;
-<% if (databaseType === 'cassandra') { %>
-import <%=packageName%>.AbstractCassandraTest;<% } %>
+<%_ if (databaseType === 'cassandra') { _%>
+import <%=packageName%>.AbstractCassandraTest;
+<%_ } _%>
 import <%=packageName%>.<%= mainClass %>;<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>
 import <%=packageName%>.domain.Authority;<% } %><% if (authenticationType === 'session') { %>
 import <%=packageName%>.domain.PersistentToken;<% } %>
@@ -31,11 +189,13 @@ import <%=packageName%>.repository.PersistentTokenRepository;
 import <%=packageName%>.repository.UserRepository;
 import <%=packageName%>.security.AuthoritiesConstants;
 import <%=packageName%>.service.MailService;
-import <%=packageName%>.service.UserService;
 import <%=packageName%>.service.dto.UserDTO;
+import <%=packageName%>.web.rest.errors.ExceptionTranslator;
 import <%=packageName%>.web.rest.vm.KeyAndPasswordVM;
 import <%=packageName%>.web.rest.vm.ManagedUserVM;
+import <%=packageName%>.service.UserService;
 import org.apache.commons.lang3.RandomStringUtils;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,9 +211,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;<% if (databaseType === 'sql') { %>
 import org.springframework.transaction.annotation.Transactional;<% } %>
-
 import java.time.Instant;<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>
 import java.time.LocalDate;<% } %>
+
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,9 +221,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -97,31 +255,35 @@ public class AccountResourceIntTest <% if (databaseType === 'cassandra') { %>ext
     @Autowired
     private HttpMessageConverter[] httpMessageConverters;
 
+    @Autowired
+    private ExceptionTranslator exceptionTranslator;
+
     @Mock
     private UserService mockUserService;
 
     @Mock
     private MailService mockMailService;
 
-    private MockMvc restUserMockMvc;
-
     private MockMvc restMvc;
+
+    private MockMvc restUserMockMvc;
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
         doNothing().when(mockMailService).sendActivationEmail(anyObject());
-
         AccountResource accountResource =
             new AccountResource(userRepository, userService, mockMailService<% if (authenticationType === 'session') { %>, persistentTokenRepository<% } %>);
 
         AccountResource accountUserMockResource =
             new AccountResource(userRepository, mockUserService, mockMailService<% if (authenticationType === 'session') { %>, persistentTokenRepository<% } %>);
-
         this.restMvc = MockMvcBuilders.standaloneSetup(accountResource)
             .setMessageConverters(httpMessageConverters)
+            .setControllerAdvice(exceptionTranslator)
             .build();
-        this.restUserMockMvc = MockMvcBuilders.standaloneSetup(accountUserMockResource).build();
+        this.restUserMockMvc = MockMvcBuilders.standaloneSetup(accountUserMockResource)
+            .setControllerAdvice(exceptionTranslator)
+            .build();
     }
 
     @Test
@@ -981,3 +1143,4 @@ public class AccountResourceIntTest <% if (databaseType === 'cassandra') { %>ext
             .andExpect(status().isInternalServerError());
     }
 }
+<%_ } _%>

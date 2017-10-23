@@ -155,14 +155,61 @@ spring:
 
         # jhipster-needle-add-social-configuration
 <%_ } _%>
+<%_ if (authenticationType === 'oauth2') { _%>
 
+# ===================================================================
+# OpenID Connect Settings. Default settings are for Keycloak in Docker.
+# Start Keycloak using `docker-compose -f src/main/docker/keycloak.yml up`.
+#
+# To use Okta, your settings should resemble the following:
+#
+# accessTokenUri: https://{yourOktaDomain}.com/oauth2/default/v1/token
+# userAuthorizationUri: https://{yourOktaDomain}.com/oauth2/default/v1/authorize
+# clientId: {copy after creating an OIDC app}
+# clientSecret: {copy after creating an OIDC app}
+# userInfoUri: https://{yourOktaDomain}.com/oauth2/default/v1/userinfo
+# tokenInfoUri: https://{yourOktaDomain}.com/oauth2/default/v1/introspect
+#
+# You can also override these properties using environment variables.
+# For example:
+#
+# export SECURITY_OAUTH2_CLIENT_CLIENT_ID="jhipster"
+# export SECURITY_OAUTH2_CLIENT_CLIENT_SECRET="38561a05"
+# ===================================================================
+<%_ } _%>
 security:
     basic:
         enabled: false
-    <%_ if (authenticationType === 'oauth2' || authenticationType === 'uaa') { _%>
+    <%_ if (authenticationType === 'uaa') { _%>
     oauth2:
         resource:
             filter-order: 3
+    <%_ } _%>
+    <%_ if (authenticationType === 'oauth2') {  _%>
+    oauth2:
+        client:
+            access-token-uri: http://localhost:9080/auth/realms/jhipster/protocol/openid-connect/token
+            user-authorization-uri: http://localhost:9080/auth/realms/jhipster/protocol/openid-connect/auth
+            <%_ if (applicationType === 'gateway' || applicationType === 'monolith') { _%>
+            client-id: web_app
+            client-secret: web_app
+            client-authentication-scheme: form
+            scope: openid profile email
+            <%_ } _%>
+            <%_ if (applicationType === 'microservice') { _%>
+            client-id: internal
+            client-secret: internal
+            authentication-scheme: header
+            client-authentication-scheme: header
+            <%_ } _%>
+        resource:
+            user-info-uri: http://localhost:9080/auth/realms/jhipster/protocol/openid-connect/userinfo
+            token-info-uri: http://localhost:9080/auth/realms/jhipster/protocol/openid-connect/token/introspect
+            prefer-token-info: false
+            <%_ if (applicationType === 'gateway' || applicationType === 'microservice') {  _%>
+            jwt:
+                key-uri: http://localhost:9080/auth/realms/jhipster
+            <%_ } _%>
     <%_ } _%>
 
 server:
