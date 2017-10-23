@@ -92,7 +92,19 @@
         <sonar.sources>${project.basedir}/<%= MAIN_DIR %></sonar.sources>
         <sonar.surefire.reportsPath>${project.testresult.directory}/surefire-reports</sonar.surefire.reportsPath>
         <sonar.tests>${project.basedir}/<%= TEST_DIR %></sonar.tests>
+        <jhipster-dependencies.version>0.0.5</jhipster-dependencies.version>
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.github.jhipster</groupId>
+                <artifactId>jhipster-dependencies</artifactId>
+                <version>${jhipster-dependencies.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <build>
         <pluginManagement>
             <plugins>
@@ -224,7 +236,15 @@
                                 <artifactId>mapstruct-processor</artifactId>
                                 <version>${org.mapstruct_mapstruct-processor.version}</version>
                             </path>
-                        </annotationProcessorPaths>                        
+                            <%_ if (databaseType === 'sql') { _%>
+                            <!-- For JPA static metamodel generation -->
+                            <path>
+                                <groupId>org.hibernate</groupId>
+                                <artifactId>hibernate-jpamodelgen</artifactId>
+                                <version>${hibernate.version}</version>
+                            </path>
+                            <% } %>
+                        </annotationProcessorPaths>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -375,7 +395,7 @@
                                 <destFile>${project.testresult.directory}/coverage/jacoco/jacoco.exec</destFile>
                             </configuration>
                         </execution>
-                        <!-- Ensures that the code coverage report for unit tests is created 
+                        <!-- Ensures that the code coverage report for unit tests is created
                             after unit tests have been run -->
                         <execution>
                             <id>post-unit-test</id>
@@ -390,7 +410,7 @@
                         </execution>
                     </executions>
                 </plugin>
-                <!--This plugin's configuration is used to store Eclipse m2e settings 
+                <!--This plugin's configuration is used to store Eclipse m2e settings
                     only. It has no influence on the Maven build itself. -->
                 <plugin>
                     <groupId>org.eclipse.m2e</groupId>

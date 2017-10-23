@@ -89,10 +89,8 @@
         <%_ if (authenticationType === 'oauth2' || authenticationType === 'uaa') { _%>
         <spring-security-oauth.version>2.0.12.RELEASE</spring-security-oauth.version>
         <%_ } _%>
-
-        <jhipster-dependencies.version>0.0.5</jhipster-dependencies.version>
     </properties>
-
+    <%_ if (serviceDiscoveryType || applicationType === 'gateway' || applicationType === 'microservice' || applicationType === 'uaa' || messageBroker === 'kafka' || hibernateCache === 'infinispan') { _%>
     <dependencyManagement>
         <dependencies>
             <%_ if (messageBroker === 'kafka') { _%>
@@ -122,16 +120,8 @@
                   <scope>import</scope>
               </dependency>
             <%_ } _%>
-            <dependency>
-                <groupId>io.github.jhipster</groupId>
-                <artifactId>jhipster-dependencies</artifactId>
-                <version>${jhipster-dependencies.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
     </dependencyManagement>
-
+    <%_ } _%>
     <dependencies>
         <dependency>
             <groupId>io.github.jhipster</groupId>
