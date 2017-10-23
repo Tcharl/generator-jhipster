@@ -56,16 +56,14 @@
         <mapstruct.version>1.1.0.Final</mapstruct.version>
         <%_ if (hibernateCache === 'infinispan') { _%>
         <infinispan-hibernate52.version>5.2.10.Final</infinispan-hibernate52.version>
-        <%_ } _%>
-        <%_ if (hibernateCache === 'infinispan') { _%>
         <infinispan.version>8.2.5.Final</infinispan.version>
-
         <%_ } _%>
         <%_ if (hibernateCache === 'ehcache' || hibernateCache === 'hazelcast' || hibernateCache === 'infinispan' || applicationType === 'gateway') { _%>
         <jcache.version>1.0.0</jcache.version>
         <%_ } _%>
         <%_ if (databaseType === 'sql') { _%>
         <liquibase-hibernate5.version>3.6</liquibase-hibernate5.version>
+        <%_ } _%>
         <%_ if (databaseType === 'mongodb') { _%>
         <guava.version>23.0</guava.version>
         <%_ } _%>
@@ -84,7 +82,7 @@
         <spring-cloud-stream.version>Chelsea.SR2</spring-cloud-stream.version>
         <%_ } _%>
         <%_ if (serviceDiscoveryType || applicationType === 'gateway' || applicationType === 'microservice' || applicationType === 'uaa') { _%>
-        <spring-cloud.version>Dalston.SR2</spring-cloud.version>
+        <spring-cloud.version>Dalston.SR4</spring-cloud.version>
         <%_ } _%>
         <%_ if (authenticationType === 'oauth2' || authenticationType === 'uaa') { _%>
         <spring-security-oauth.version>2.0.12.RELEASE</spring-security-oauth.version>
@@ -563,6 +561,12 @@
             <groupId>org.springframework.security.oauth</groupId>
             <artifactId>spring-security-oauth2</artifactId>
         </dependency>
+            <%_ if (applicationType === 'gateway' || applicationType === 'microservice') { _%>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-jwt</artifactId>
+        </dependency>
+            <%_ } _%>
         <%_ } _%>
         <%_ if (authenticationType === 'jwt') { _%>
         <dependency>
@@ -803,7 +807,6 @@
             <plugin>
                 <groupId>com.spotify</groupId>
                 <artifactId>dockerfile-maven-plugin</artifactId>
-
             </plugin>
             <%_ if (enableSwaggerCodegen) { _%>
             <plugin>
@@ -1125,7 +1128,7 @@
                 To use it, run in 3 terminals:
                 - './mvnw -Pcc scala:cc' for continuous compilation of your classes
                 - './mvnw -Pcc' for hot reload of Spring boot
-                - 'gulp' for hot reload of the HTML/JavaScript assets
+                - 'npm start/yarn start' for hot reload of the HTML/JavaScript asset
                 Everything should hot reload automatically!
             -->
             <id>cc</id>

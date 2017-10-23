@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const chalk = require('chalk');
+
 module.exports = {
     askForModuleName,
     askForClient,
@@ -34,22 +36,26 @@ function askForClient(meta) {
 
     const applicationType = this.applicationType;
 
+    const choices = [
+        {
+            value: 'angularX',
+            name: 'Angular 4'
+        }
+    ];
+
+    if (this.authenticationType !== 'oauth2') {
+        choices.push({
+            value: 'angular1',
+            name: 'AngularJS 1.x'
+        });
+    }
+
     const PROMPT = {
         type: 'list',
         name: 'clientFramework',
         when: response => (applicationType !== 'microservice' && applicationType !== 'uaa'),
-        message: response => this.getNumberedQuestion('Which *Framework* would you like to use for the client?',
-            applicationType !== 'microservice' && applicationType !== 'uaa'),
-        choices: [
-            {
-                value: 'angularX',
-                name: 'Angular 4'
-            },
-            {
-                value: 'angular1',
-                name: 'AngularJS 1.x'
-            }
-        ],
+        message: `Which ${chalk.yellow('*Framework*')} would you like to use for the client?`,
+        choices,
         default: 'angularX'
     };
 
@@ -71,7 +77,7 @@ function askForClientSideOpts() {
         {
             type: 'confirm',
             name: 'useSass',
-            message: response => this.getNumberedQuestion('Would you like to use the LibSass stylesheet preprocessor for your CSS?', true),
+            message: `Would you like to enable ${chalk.yellow('*SASS*')} support using the LibSass stylesheet preprocessor?`,
             default: false
         }
     ];

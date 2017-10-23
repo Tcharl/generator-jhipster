@@ -110,6 +110,32 @@ module.exports = class extends PrivateBase {
     }
 
     /**
+     * Add external resources to root file(index.html).
+     *
+     * @param {string} resources - Resources added to root file.
+     * @param {string} comment - comment to add before resources content.
+     */
+    addExternalResourcesToRoot(resources, comment) {
+        const indexFilePath = `${CLIENT_MAIN_SRC_DIR}index.html`;
+        let resourcesBlock = '';
+        if (comment) {
+            resourcesBlock += `<!-- ${comment} -->\n`;
+        }
+        resourcesBlock += `${resources}\n`;
+        try {
+            jhipsterUtils.rewriteFile({
+                file: indexFilePath,
+                needle: 'jhipster-needle-add-resources-to-root',
+                splicable: [resourcesBlock]
+            }, this);
+        } catch (e) {
+            this.log(`${chalk.yellow('\nUnable to find ') + indexFilePath + chalk.yellow(' or missing required jhipster-needle. Resources are not added to JHipster app.\n')}`);
+            this.debug('Error:', e);
+        }
+    }
+
+
+    /**
      * Add a new menu element to the admin menu.
      *
      * @param {string} routerName - The name of the AngularJS router that is added to the admin menu.
@@ -201,14 +227,12 @@ module.exports = class extends PrivateBase {
                     file: entityMenuPath,
                     needle: 'jhipster-needle-add-entity-to-menu',
                     splicable: [
-                        this.stripMargin(
-                            `|<li>
+                        this.stripMargin(`|<li>
                              |                        <a class="dropdown-item" routerLink="${routerName}" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="collapseNavbar()">
                              |                            <i class="fa fa-fw fa-asterisk" aria-hidden="true"></i>
                              |                            <span${enableTranslation ? ` jhiTranslate="global.menu.entities.${_.camelCase(routerName)}"` : ''}>${_.startCase(routerName)}</span>
                              |                        </a>
-                             |                    </li>`
-                        )
+                             |                    </li>`)
                     ]
                 }, this);
             }
@@ -221,7 +245,11 @@ module.exports = class extends PrivateBase {
     /**
      * Add a new entity in the TS modules file.
      *
-     * @param {string} routerName - The name of the AngularJS router (which by default is the name of the entity).
+     * @param {string} entityInstance - Entity Instance
+     * @param {string} entityClass - Entity Class
+     * @param {string} entityAngularName - Entity Angular Name
+     * @param {string} entityFolderName - Entity Folder Name
+     * @param {string} entityFileName - Entity File Name
      * @param {boolean} enableTranslation - If translations are enabled or not
      * @param {string} clientFramework - The name of the client framework
      */
@@ -251,9 +279,7 @@ module.exports = class extends PrivateBase {
                 file: entityModulePath,
                 needle: 'jhipster-needle-add-entity-module',
                 splicable: [
-                    this.stripMargin(
-                        `|${appName}${entityAngularName}Module,`
-                    )
+                    this.stripMargin(`|${appName}${entityAngularName}Module,`)
                 ]
             }, this);
         } catch (e) {
@@ -297,9 +323,7 @@ module.exports = class extends PrivateBase {
                 file: adminModulePath,
                 needle: 'jhipster-needle-add-admin-module',
                 splicable: [
-                    this.stripMargin(
-                        `|${appName}${adminAngularName}Module,`
-                    )
+                    this.stripMargin(`|${appName}${adminAngularName}Module,`)
                 ]
             }, this);
         } catch (e) {
@@ -309,7 +333,7 @@ module.exports = class extends PrivateBase {
     }
 
     /**
-     * A a new element in the "global.json" translations.
+     * Add a new element in the "global.json" translations.
      *
      * @param {string} key - Key for the menu entry
      * @param {string} value - Default translated value
@@ -332,7 +356,7 @@ module.exports = class extends PrivateBase {
     }
 
     /**
-     * A a new element in the admin section of "global.json" translations.
+     * Add a new element in the admin section of "global.json" translations.
      *
      * @param {string} key - Key for the menu entry
      * @param {string} value - Default translated value
@@ -355,7 +379,7 @@ module.exports = class extends PrivateBase {
     }
 
     /**
-     * A a new entity in the "global.json" translations.
+     * Add a new entity in the "global.json" translations.
      *
      * @param {string} key - Key for the entity name
      * @param {string} value - Default translated value
@@ -378,7 +402,7 @@ module.exports = class extends PrivateBase {
     }
 
     /**
-     * A a new entry as a root param in "global.json" translations.
+     * Add a new entry as a root param in "global.json" translations.
      *
      * @param {string} key - Key for the entry
      * @param {string} value - Default translated value or object with multiple key and translated value
@@ -557,7 +581,7 @@ module.exports = class extends PrivateBase {
      * Add a new parameter in the ".bowerrc".
      *
      * @param {string} key - name of the parameter
-     * @param {string, obj, bool, etc.} value - value of the parameter
+     * @param {string | boolean | any} value - value of the parameter
      */
     addBowerrcParameter(key, value) {
         const fullPath = '.bowerrc';
@@ -661,9 +685,9 @@ module.exports = class extends PrivateBase {
      * Add a new module in the TS modules file.
      *
      * @param {string} appName - Angular2 application name.
-     * @param {string} adminAngularName - The name of the new admin item.
-     * @param {string} adminFolderName - The name of the folder.
-     * @param {string} adminFileName - The name of the file.
+     * @param {string} angularName - The name of the new admin item.
+     * @param {string} folderName - The name of the folder.
+     * @param {string} fileName - The name of the file.
      * @param {boolean} enableTranslation - If translations are enabled or not.
      * @param {string} clientFramework - The name of the client framework.
      */
@@ -692,9 +716,7 @@ module.exports = class extends PrivateBase {
                 file: modulePath,
                 needle: 'jhipster-needle-angular-add-module',
                 splicable: [
-                    this.stripMargin(
-                        `|${appName}${angularName}Module,`
-                    )
+                    this.stripMargin(`|${appName}${angularName}Module,`)
                 ]
             }, this);
         } catch (e) {
@@ -842,7 +864,7 @@ module.exports = class extends PrivateBase {
     }
 
     /**
-     * A a new column to a Liquibase changelog file for entity.
+     * Add a new column to a Liquibase changelog file for entity.
      *
      * @param {string} filePath - The full path of the changelog file.
      * @param {string} content - The content to be added as column, can have multiple columns as well
@@ -863,7 +885,7 @@ module.exports = class extends PrivateBase {
     }
 
     /**
-     * A a new changeset to a Liquibase changelog file for entity.
+     * Add a new changeset to a Liquibase changelog file for entity.
      *
      * @param {string} filePath - The full path of the changelog file.
      * @param {string} content - The content to be added as changeset
@@ -886,6 +908,7 @@ module.exports = class extends PrivateBase {
     /**
      * Add a new social button in the login and register modules
      *
+     * @param {boolean} isUseSass - flag indicating if sass should be used
      * @param {string} socialName - name of the social module. ex: 'facebook'
      * @param {string} socialParameter - parameter to send to social connection ex: 'public_profile,email'
      * @param {string} buttonColor - color of the social button. ex: '#3b5998'
@@ -1004,6 +1027,7 @@ module.exports = class extends PrivateBase {
     /**
      * Add new css style to the angular application in "main.css".
      *
+     * @param {boolean} isUseSass - flag indicating if sass should be used
      * @param {string} style - css to add in the file
      * @param {string} comment - comment to add before css code
      *
@@ -1089,6 +1113,79 @@ module.exports = class extends PrivateBase {
             this.debug('Error:', e);
         }
     }
+
+    /**
+     * Add new scss style to the angular application in "vendor.scss".
+     *
+     * @param {string} style - scss to add in the file
+     * @param {string} comment - comment to add before css code
+     *
+     * example:
+     *
+     * style = '.success {\n     @extend .message;\n    border-color: green;\n}'
+     * comment = 'Message'
+     *
+     * * ==========================================================================
+     * Message
+     * ========================================================================== *
+     * .success {
+     *     @extend .message;
+     *     border-color: green;
+     * }
+     *
+     */
+    addVendorSCSSStyle(style, comment) {
+        const fullPath = `${CLIENT_MAIN_SRC_DIR}content/scss/vendor.scss`;
+        let styleBlock = '';
+        if (comment) {
+            styleBlock += '/* ==========================================================================\n';
+            styleBlock += `${comment}\n`;
+            styleBlock += '========================================================================== */\n';
+        }
+        styleBlock += `${style}\n`;
+        try {
+            jhipsterUtils.rewriteFile({
+                file: fullPath,
+                needle: 'jhipster-needle-scss-add-vendor',
+                splicable: [
+                    styleBlock
+                ]
+            }, this);
+        } catch (e) {
+            this.log(chalk.yellow('\nUnable to find ') + fullPath + chalk.yellow(' or missing required jhipster-needle. Style not added to JHipster app.\n'));
+            this.debug('Error:', e);
+        }
+    }
+
+    /**
+     * Copy third-party library resources path.
+     *
+     * @param {string} sourceFolder - third-party library resources source path
+     * @param {string} targetFolder - third-party library resources destination path
+     */
+    copyExternalAssetsInWebpack(sourceFolder, targetFolder) {
+        const from = `${CLIENT_MAIN_SRC_DIR}content/${sourceFolder}/`;
+        const to = `content/${targetFolder}/`;
+        const webpackDevPath = `${CLIENT_WEBPACK_DIR}/webpack.common.js`;
+        let assetBlock = '';
+        if (sourceFolder && targetFolder) {
+            assetBlock = `{ from: './${from}', to: '${to}' },`;
+        }
+
+        try {
+            jhipsterUtils.rewriteFile({
+                file: webpackDevPath,
+                needle: 'jhipster-needle-add-assets-to-webpack',
+                splicable: [
+                    assetBlock
+                ]
+            }, this);
+        } catch (e) {
+            this.log(chalk.yellow('\nUnable to find ') + webpackDevPath + chalk.yellow(' or missing required jhipster-needle. Resource path not added to JHipster app.\n'));
+            this.debug('Error:', e);
+        }
+    }
+
 
     /**
      * Add a new Maven dependency.
@@ -1270,7 +1367,7 @@ module.exports = class extends PrivateBase {
         const _this = generator || this;
         let regex;
         switch (action) {
-        case 'stripHtml' :
+        case 'stripHtml':
             regex = new RegExp([
                 /( (data-t|jhiT)ranslate="([a-zA-Z0-9 +{}'_](\.)?)+")/, // data-translate or jhiTranslate
                 /( translate(-v|V)alues="\{([a-zA-Z]|\d|:|\{|\}|\[|\]|-|'|\s|\.|_)*?\}")/, // translate-values or translateValues
@@ -1280,7 +1377,7 @@ module.exports = class extends PrivateBase {
 
             jhipsterUtils.copyWebResource(source, dest, regex, 'html', _this, opt, template);
             break;
-        case 'stripJs' :
+        case 'stripJs':
             regex = new RegExp([
                 /(,[\s]*(resolve):[\s]*[{][\s]*(translatePartialLoader)['a-zA-Z0-9$,(){.<%=\->;\s:[\]]*(;[\s]*\}\][\s]*\}))/, // ng1 resolve block
                 /([\s]import\s\{\s?JhiLanguageService\s?\}\sfrom\s["|']ng-jhipster["|'];)/, // ng2 import jhiLanguageService
@@ -1291,7 +1388,7 @@ module.exports = class extends PrivateBase {
 
             jhipsterUtils.copyWebResource(source, dest, regex, 'js', _this, opt, template);
             break;
-        case 'copy' :
+        case 'copy':
             _this.copy(source, dest);
             break;
         default:
@@ -1328,7 +1425,7 @@ module.exports = class extends PrivateBase {
     /**
      * Rewrite the specified file with provided content at the needle location
      *
-     * @param {string} fullPath - path of the source file to rewrite
+     * @param {string} filePath - path of the source file to rewrite
      * @param {string} needle - needle to look for where content will be inserted
      * @param {string} content - content to be written
      */
@@ -1350,7 +1447,7 @@ module.exports = class extends PrivateBase {
     /**
      * Replace the pattern/regex with provided content
      *
-     * @param {string} fullPath - path of the source file to rewrite
+     * @param {string} filePath - path of the source file to rewrite
      * @param {string} pattern - pattern to look for where content will be replaced
      * @param {string} content - content to be written
      * @param {string} regex - true if pattern is regex
@@ -1449,10 +1546,10 @@ module.exports = class extends PrivateBase {
 
     /**
      * Call all the module hooks with the given options.
-     * @param {string} hookFor : "app" or "entity"
-     * @param {string} hookType : "pre" or "post"
-     * @param options : the options to pass to the hooks
-     * @param cb : callback to trigger at the end
+     * @param {string} hookFor - "app" or "entity"
+     * @param {string} hookType - "pre" or "post"
+     * @param {any} options - the options to pass to the hooks
+     * @param {function} cb - callback to trigger at the end
      */
     callHooks(hookFor, hookType, options, cb) {
         const modules = this.getModuleHooks();
@@ -1462,30 +1559,101 @@ module.exports = class extends PrivateBase {
             if (module.hookFor === hookFor && module.hookType === hookType) {
                 // compose with the modules callback generator
                 const hook = module.generatorCallback.split(':')[1];
-                let generatorTocall = path.join(process.cwd(), 'node_modules', module.npmPackageName, 'generators', hook || 'app');
                 try {
-                    if (!fs.existsSync(generatorTocall)) {
-                        this.debug('using global module as local version could not be found in node_modules');
-                        generatorTocall = path.join(module.npmPackageName, 'generators', hook || 'app');
-                    }
-                    this.debug('Running yeoman compose with options: ', generatorTocall, options);
-                    this.composeWith(require.resolve(generatorTocall), options);
-                } catch (err) {
-                    this.debug('ERROR:', err);
-                    try {
-                        // Fallback for legacy modules
-                        this.debug('Running yeoman legacy compose with options: ', module.generatorCallback, options);
-                        this.composeWith(module.generatorCallback, options);
-                    } catch (e) {
-                        this.log(chalk.red('Could not compose module ') + chalk.bold.yellow(module.npmPackageName) +
-                            chalk.red('. \nMake sure you have installed the module with ') + chalk.bold.yellow(`'npm install -g ${module.npmPackageName}'`));
-                        this.debug('ERROR:', e);
-                    }
+                    this.composeExternalModule(module.npmPackageName, hook || 'app', options);
+                } catch (e) {
+                    this.log(chalk.red('Could not compose module ') + chalk.bold.yellow(module.npmPackageName) +
+                        chalk.red('. \nMake sure you have installed the module with ') + chalk.bold.yellow(`'npm install -g ${module.npmPackageName}'`));
+                    this.debug('ERROR:', e);
                 }
             }
         });
         this.debug('calling callback');
         cb && cb();
+    }
+
+    /**
+     * Compose an external generator with Yeoman.
+     * @param {string} npmPackageName - package name
+     * @param {string} subGen - sub generator name
+     * @param {any} options - options to pass
+     */
+    composeExternalModule(npmPackageName, subGen, options) {
+        let generatorTocall = path.join(process.cwd(), 'node_modules', npmPackageName, 'generators', subGen);
+        try {
+            if (!fs.existsSync(generatorTocall)) {
+                this.debug('using global module as local version could not be found in node_modules');
+                generatorTocall = path.join(npmPackageName, 'generators', subGen);
+            }
+            this.debug('Running yeoman compose with options: ', generatorTocall, options);
+            this.composeWith(require.resolve(generatorTocall), options);
+        } catch (err) {
+            this.debug('ERROR:', err);
+            const generatorName = npmPackageName.replace('generator-', '');
+            const generatorCallback = `${generatorName}:${subGen}`;
+            // Fallback for legacy modules
+            this.debug('Running yeoman legacy compose with options: ', generatorCallback, options);
+            this.composeWith(generatorCallback, options);
+        }
+    }
+
+    /**
+     * Get a name suitable for microservice
+     * @param {string} microserviceName
+     */
+    getMicroserviceAppName(microserviceName) {
+        return _.camelCase(microserviceName, true) + (microserviceName.endsWith('App') ? '' : 'App');
+    }
+
+    /**
+     * Load an entity configuration file into context.
+     */
+    loadEntityJson() {
+        try {
+            this.fileData = this.fs.readJSON(this.fromPath);
+        } catch (err) {
+            this.debug('Error:', err);
+            this.error(chalk.red('\nThe entity configuration file could not be read!\n'));
+        }
+        this.relationships = this.fileData.relationships || [];
+        this.fields = this.fileData.fields || [];
+        this.changelogDate = this.fileData.changelogDate;
+        this.dto = this.fileData.dto;
+        this.service = this.fileData.service;
+        this.fluentMethods = this.fileData.fluentMethods;
+        this.pagination = this.fileData.pagination;
+        this.searchEngine = this.fileData.searchEngine || this.searchEngine;
+        this.javadoc = this.fileData.javadoc;
+        this.entityTableName = this.fileData.entityTableName;
+        this.jhiPrefix = this.fileData.jhiPrefix || this.jhiPrefix;
+        this.jhiTablePrefix = this.getTableName(this.jhiPrefix);
+        this.copyFilteringFlag(this.fileData, this);
+        if (_.isUndefined(this.entityTableName)) {
+            this.warning(`entityTableName is missing in .jhipster/${this.name}.json, using entity name as fallback`);
+            this.entityTableName = this.getTableName(this.name);
+        }
+        if (jhiCore.isReservedTableName(this.entityTableName, this.prodDatabaseType)) {
+            this.entityTableName = `${this.jhiTablePrefix}_${this.entityTableName}`;
+        }
+        this.fields.forEach((field) => {
+            this.fieldNamesUnderscored.push(_.snakeCase(field.fieldName));
+            this.fieldNameChoices.push({ name: field.fieldName, value: field.fieldName });
+        });
+        this.relationships.forEach((rel) => {
+            this.relNameChoices.push({ name: `${rel.relationshipName}:${rel.relationshipType}`, value: `${rel.relationshipName}:${rel.relationshipType}` });
+        });
+        if (this.fileData.angularJSSuffix !== undefined) {
+            this.entityAngularJSSuffix = this.fileData.angularJSSuffix;
+        }
+        this.useMicroserviceJson = this.useMicroserviceJson || !_.isUndefined(this.fileData.microserviceName);
+        if (this.applicationType === 'gateway' && this.useMicroserviceJson) {
+            this.microserviceName = this.fileData.microserviceName;
+            if (!this.microserviceName) {
+                this.error(chalk.red('Microservice name for the entity is not found. Entity cannot be generated!'));
+            }
+            this.microserviceAppName = this.getMicroserviceAppName(this.microserviceName);
+            this.skipServer = true;
+        }
     }
 
     /**
@@ -1519,9 +1687,7 @@ module.exports = class extends PrivateBase {
             return entities;
         }
 
-        return shelljs.ls(
-            path.join(JHIPSTER_CONFIG_DIR, '*.json')
-        ).reduce((acc, file) => {
+        return shelljs.ls(path.join(JHIPSTER_CONFIG_DIR, '*.json')).reduce((acc, file) => {
             try {
                 const definition = jhiCore.readEntityJSON(file);
                 acc.push({ name: path.basename(file, '.json'), definition });
@@ -1689,7 +1855,7 @@ module.exports = class extends PrivateBase {
     /**
      * Print a warning message.
      *
-     * @param {string} value - message to print
+     * @param {string} msg - message to print
      */
     warning(msg) {
         this.log(`${chalk.yellow.bold('WARNING!')} ${msg}`);
@@ -1698,7 +1864,7 @@ module.exports = class extends PrivateBase {
     /**
      * Print an info message.
      *
-     * @param {string} value - message to print
+     * @param {string} msg - message to print
      */
     info(msg) {
         this.log.info(msg);
@@ -1707,7 +1873,7 @@ module.exports = class extends PrivateBase {
     /**
      * Print a success message.
      *
-     * @param {string} value - message to print
+     * @param {string} msg - message to print
      */
     success(msg) {
         this.log.ok(msg);
@@ -1717,6 +1883,7 @@ module.exports = class extends PrivateBase {
      * Generate a KeyStore for uaa authorization server.
      */
     generateKeyStore() {
+        const done = this.async();
         const keyStoreFile = `${SERVER_MAIN_RES_DIR}keystore.jks`;
         if (this.fs.exists(keyStoreFile)) {
             this.log(chalk.cyan(`\nKeyStore '${keyStoreFile}' already exists. Leaving unchanged.\n`));
@@ -1727,7 +1894,8 @@ module.exports = class extends PrivateBase {
             if (javaHome) {
                 keytoolPath = `${javaHome}/bin/`;
             }
-            shelljs.exec(`"${keytoolPath}keytool" -genkey -noprompt ` +
+            shelljs.exec(
+                `"${keytoolPath}keytool" -genkey -noprompt ` +
                 '-keyalg RSA ' +
                 '-alias selfsigned ' +
                 `-keystore ${keyStoreFile} ` +
@@ -1736,12 +1904,14 @@ module.exports = class extends PrivateBase {
                 '-keysize 2048 ' +
                 `-dname "CN=Java Hipster, OU=Development, O=${this.packageName}, L=, ST=, C="`
                 , (code) => {
-                if (code !== 0) {
-                    this.error('\nFailed to create a KeyStore with \'keytool\'', code);
-                } else {
-                    this.log(chalk.green(`\nKeyStore '${keyStoreFile}' generated successfully.\n`));
+                    if (code !== 0) {
+                        this.error('\nFailed to create a KeyStore with \'keytool\'', code);
+                    } else {
+                        this.log(chalk.green(`\nKeyStore '${keyStoreFile}' generated successfully.\n`));
+                    }
+                    done();
                 }
-            });
+            );
         }
     }
 
@@ -1770,10 +1940,8 @@ module.exports = class extends PrivateBase {
             const done = this.async();
             shelljs.exec(`npm show ${GENERATOR_JHIPSTER} version`, { silent: true }, (code, stdout, stderr) => {
                 if (!stderr && semver.lt(packagejs.version, stdout)) {
-                    this.log(
-                        `${chalk.yellow(' ______________________________________________________________________________\n\n') +
-                        chalk.yellow('  JHipster update available: ') + chalk.green.bold(stdout.replace('\n', '')) + chalk.gray(` (current: ${packagejs.version})`)}\n`
-                    );
+                    this.log(`${chalk.yellow(' ______________________________________________________________________________\n\n') +
+                        chalk.yellow('  JHipster update available: ') + chalk.green.bold(stdout.replace('\n', '')) + chalk.gray(` (current: ${packagejs.version})`)}\n`);
                     if (this.useYarn) {
                         this.log(chalk.yellow(`  Run ${chalk.magenta(`yarn global upgrade ${GENERATOR_JHIPSTER}`)} to update.\n`));
                     } else {
@@ -1803,6 +1971,9 @@ module.exports = class extends PrivateBase {
         return this.getAngularXAppName();
     }
 
+    /**
+     * get the Angular 2+ application name.
+     */
     getAngularXAppName() {
         return _.upperFirst(_.camelCase(this.baseName, true));
     }
@@ -1838,7 +2009,7 @@ module.exports = class extends PrivateBase {
                 }
                 return true;
             },
-            message: response => this.getNumberedQuestion('What is the base name of your application?', true),
+            message: 'What is the base name of your application?',
             default: defaultAppBaseName
         }).then((prompt) => {
             generator.baseName = prompt.baseName;
@@ -1859,7 +2030,7 @@ module.exports = class extends PrivateBase {
             {
                 type: 'confirm',
                 name: 'enableTranslation',
-                message: response => this.getNumberedQuestion('Would you like to enable internationalization support?', true),
+                message: 'Would you like to enable internationalization support?',
                 default: true
             },
             {
@@ -1914,16 +2085,14 @@ module.exports = class extends PrivateBase {
     }
 
     /**
+     * @Deprecated
      * Add numbering to a question
      *
      * @param {String} msg - question text
      * @param {boolean} cond - increment question
      */
     getNumberedQuestion(msg, cond) {
-        if (cond) {
-            ++this.currentQuestion;
-        }
-        return `(${this.currentQuestion}/${this.totalQuestions}) ${msg}`;
+        return msg;
     }
 
     /**
@@ -2000,5 +2169,98 @@ module.exports = class extends PrivateBase {
         }
         this.debug(`Time taken to write files: ${new Date() - startTime}ms`);
         return filesOut;
+    }
+
+    /**
+     * Setup client instance level options from context.
+     * @param {any} generator - generator instance
+     * @param {any} context - context to use default is generator instance
+     */
+    setupClientOptions(generator, context = generator) {
+        generator.skipServer = context.configOptions.skipServer || context.config.get('skipServer');
+        generator.skipUserManagement = context.configOptions.skipUserManagement || context.options['skip-user-management'] || context.config.get('skipUserManagement');
+        generator.authenticationType = context.options.auth || context.configOptions.authenticationType || context.config.get('authenticationType');
+        if (generator.authenticationType === 'oauth2') {
+            generator.skipUserManagement = true;
+        }
+        const uaaBaseName = context.options.uaaBaseName || context.configOptions.uaaBaseName || context.options['uaa-base-name'] || context.config.get('uaaBaseName');
+        if (context.options.auth === 'uaa' && _.isNil(uaaBaseName)) {
+            generator.error('when using --auth uaa, a UAA basename must be provided with --uaa-base-name');
+        }
+        generator.uaaBaseName = uaaBaseName;
+
+        generator.buildTool = context.options.build;
+        generator.websocket = context.options.websocket;
+        generator.devDatabaseType = context.options.db || context.configOptions.devDatabaseType || context.config.get('devDatabaseType');
+        generator.prodDatabaseType = context.options.db || context.configOptions.prodDatabaseType || context.config.get('prodDatabaseType');
+        generator.databaseType = generator.getDBTypeFromDBValue(context.options.db) || context.configOptions.databaseType || context.config.get('databaseType');
+        generator.enableSocialSignIn = context.options.social || context.config.get('enableSocialSignIn');
+        generator.searchEngine = context.options['search-engine'] || context.config.get('searchEngine');
+        generator.hibernateCache = context.options['hb-cache'] || context.config.get('hibernateCache');
+        generator.otherModules = context.configOptions.otherModules || [];
+        generator.jhiPrefix = context.configOptions.jhiPrefix || context.config.get('jhiPrefix') || context.options['jhi-prefix'];
+        generator.jhiPrefixCapitalized = _.upperFirst(generator.jhiPrefix);
+        generator.testFrameworks = [];
+
+        if (context.options.protractor) generator.testFrameworks.push('protractor');
+
+        generator.baseName = context.configOptions.baseName;
+        generator.logo = context.configOptions.logo;
+        generator.useYarn = context.configOptions.useYarn = !context.options.npm;
+        generator.clientPackageManager = context.configOptions.clientPackageManager;
+        generator.isDebugEnabled = context.configOptions.isDebugEnabled || context.options.debug;
+    }
+
+    /**
+     * Setup Server instance level options from context.
+     * @param {any} generator - generator instance
+     * @param {any} context - context to use default is generator instance
+     */
+    setupServerOptions(generator, context = generator) {
+        generator.skipClient = !context.options['client-hook'] || context.configOptions.skipClient || context.config.get('skipClient');
+        generator.skipUserManagement = context.configOptions.skipUserManagement || context.options['skip-user-management'] || context.config.get('skipUserManagement');
+        generator.enableTranslation = context.options.i18n || context.configOptions.enableTranslation || context.config.get('enableTranslation');
+        generator.testFrameworks = [];
+
+        if (context.options.gatling) generator.testFrameworks.push('gatling');
+        if (context.options.cucumber) generator.testFrameworks.push('cucumber');
+
+        generator.logo = context.configOptions.logo;
+        generator.baseName = context.configOptions.baseName;
+        generator.clientPackageManager = context.configOptions.clientPackageManager;
+        generator.isDebugEnabled = context.configOptions.isDebugEnabled || context.options.debug;
+    }
+
+    /**
+     * Setup Entity instance level options from context.
+     * @param {any} generator - generator instance
+     * @param {any} context - context to use default is generator instance
+     */
+    setupEntityOptions(generator, context = generator) {
+        generator.name = context.options.name;
+        // remove extension if feeding json files
+        if (generator.name !== undefined) {
+            generator.name = generator.name.replace('.json', '');
+        }
+
+        generator.regenerate = context.options.regenerate;
+        generator.fluentMethods = context.options['fluent-methods'];
+        generator.entityTableName = generator.getTableName(context.options['table-name'] || generator.name);
+        generator.entityNameCapitalized = _.upperFirst(generator.name);
+        generator.entityAngularJSSuffix = context.options['angular-suffix'];
+        generator.isDebugEnabled = context.options.debug;
+        if (generator.entityAngularJSSuffix && !generator.entityAngularJSSuffix.startsWith('-')) {
+            generator.entityAngularJSSuffix = `-${generator.entityAngularJSSuffix}`;
+        }
+        generator.rootDir = generator.destinationRoot();
+        // enum-specific consts
+        generator.enums = [];
+
+        generator.existingEnum = false;
+
+        generator.fieldNamesUnderscored = ['id'];
+        // these variable hold field and relationship names for question options during update
+        generator.fieldNameChoices = [];
+        generator.relNameChoices = [];
     }
 };

@@ -103,6 +103,16 @@ const expectedFiles = {
         `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/service/dto/UserDTO.java`,
         `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/service/mapper/package-info.java`,
         `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/service/mapper/UserMapper.java`,
+        `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/web/rest/errors/package-info.java`,
+        `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/web/rest/errors/BadRequestAlertException.java`,
+        `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/web/rest/errors/CustomParameterizedException.java`,
+        `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/web/rest/errors/InternalServerErrorException.java`,
+        `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/web/rest/errors/EmailAlreadyUsedException.java`,
+        `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/web/rest/errors/ErrorConstants.java`,
+        `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/web/rest/errors/ExceptionTranslator.java`,
+        `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/web/rest/errors/FieldErrorVM.java`,
+        `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/web/rest/errors/InvalidPasswordException.java`,
+        `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/web/rest/errors/LoginAlreadyUsedException.java`,
         `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/web/rest/vm/package-info.java`,
         `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/web/rest/vm/KeyAndPasswordVM.java`,
         `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/web/rest/vm/LoggerVM.java`,
@@ -257,6 +267,7 @@ const expectedFiles = {
         `${CLIENT_MAIN_SRC_DIR}app/components/util/truncate-characters.filter.js`,
         `${CLIENT_MAIN_SRC_DIR}app/components/util/truncate-words.filter.js`,
         `${CLIENT_MAIN_SRC_DIR}app/components/util/date-util.service.js`,
+        `${CLIENT_MAIN_SRC_DIR}app/components/util/error.constants.js`,
         `${CLIENT_MAIN_SRC_DIR}app/components/util/sort.directive.js`,
         `${CLIENT_MAIN_SRC_DIR}app/components/util/sort-by.directive.js`,
         `${CLIENT_MAIN_SRC_DIR}app/components/util/capitalize.filter.js`,
@@ -391,6 +402,13 @@ const expectedFiles = {
     jwtClient: [
         `${CLIENT_MAIN_SRC_DIR}app/blocks/interceptor/auth.interceptor.js`,
         `${CLIENT_MAIN_SRC_DIR}app/services/auth/auth.jwt.service.js`
+    ],
+
+    oauth2: [
+        `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/config/SecurityConfiguration.java`,
+        `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/domain/User.java`,
+        `${SERVER_MAIN_SRC_DIR}com/mycompany/myapp/web/rest/AccountResource.java`,
+        `${DOCKER_DIR}keycloak.yml`
     ],
 
     messageBroker: [
