@@ -29,8 +29,17 @@ export class ProfileService {
     private infoUrl = SERVER_API_URL + 'management/info';
     private profileInfo: Promise<ProfileInfo>;
 
+    /**
+    * Creates an instance of PageRibbonComponent.
+    * @param {HttpClient} The http client to retrieve ribbon infos
+    * @memberof PageRibbonComponent
+    */
     constructor(private http: HttpClient) { }
 
+    /**
+    * Called at the component initialization to get user profile info
+    * @memberof PageRibbonComponent
+    */
     getProfileInfo(): Promise<ProfileInfo> {
         if (!this.profileInfo) {
             this.profileInfo = this.http.get<ProfileInfo>(this.infoUrl, { observe: 'response' })

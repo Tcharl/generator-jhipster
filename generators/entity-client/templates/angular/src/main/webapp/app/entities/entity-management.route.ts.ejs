@@ -45,12 +45,12 @@ export class <%= entityAngularName %>Resolve implements Resolve<I<%= entityAngul
     constructor(private service: <%= entityAngularName %>Service) {
     }
 
-    resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<<%= entityAngularName %>> {
+    resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<I<%= entityAngularName %>> {
         const id = route.params['id'] ? route.params['id'] : null;
         if (id) {
             return this.service.find(id).pipe(
-                filter((response: HttpResponse<<%= entityAngularName %>>) => response.ok),
-                map((<%= entityInstance %>: HttpResponse<<%= entityAngularName %>>) => <%= entityInstance %>.body)
+                filter((response: HttpResponse<I<%= entityAngularName %>>) => response.ok),
+                map((<%= entityInstance %>: HttpResponse<I<%= entityAngularName %>>) => <%= entityInstance %>.body)
             );
         }
         return of(new <%= entityAngularName %>());

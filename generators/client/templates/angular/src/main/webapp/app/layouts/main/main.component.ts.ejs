@@ -31,6 +31,16 @@ import { Title } from '@angular/platform-browser';
 })
 export class <%=jhiPrefixCapitalized%>MainComponent implements OnInit {
 
+    /**
+     * Creates an instance of JhiMainComponent.
+<%_ if (enableTranslation) { _%>
+     * @param {JhiLanguageHelper} jhiLanguageHelper helper for language handling
+<%_ } else { _%>
+     * @param {Title} titleService service to retrieve the title
+<%_ } _%>
+     * @param {Router} router to get event and state data from the route
+     * @memberof JhiMainComponent
+     */
     constructor(
         <%_ if (enableTranslation) { _%>
         private jhiLanguageHelper: JhiLanguageHelper,
@@ -40,6 +50,14 @@ export class <%=jhiPrefixCapitalized%>MainComponent implements OnInit {
         private router: Router
     ) {}
 
+    /**
+     * Get the page title from the activated route snapshot data
+     * If not defined, returns the page title default value
+     * @private
+     * @param {ActivatedRouteSnapshot} routeSnapshot : Snapshot of the current activated route
+     * @returns the page title as a string
+     * @memberof JhiMainComponent
+     */
     private getPageTitle(routeSnapshot: ActivatedRouteSnapshot) {
         let title: string = (routeSnapshot.data && routeSnapshot.data['pageTitle']) ? routeSnapshot.data['pageTitle'] : '<%= angularAppName %>';
         if (routeSnapshot.firstChild) {
@@ -48,6 +66,10 @@ export class <%=jhiPrefixCapitalized%>MainComponent implements OnInit {
         return title;
     }
 
+    /**
+     * Called at the component initialization to update page title when necessary
+     * @memberof JhiMainComponent
+     */
     ngOnInit() {
         this.router.events.subscribe((event) => {
             if (event instanceof NavigationEnd) {

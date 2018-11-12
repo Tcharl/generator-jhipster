@@ -34,11 +34,11 @@ import { ProfileService } from '../profiles/profile.service';
     selector: '<%= jhiPrefixDashed %>-navbar',
     templateUrl: './navbar.component.html',
     styleUrls: [
-        <%_ if (useSass) { _%>
+<%_ if (useSass) { _%>
         'navbar.scss'
-        <%_ } else { _%>
+<%_ } else { _%>
         'navbar.css'
-        <%_ } _%>
+<%_ } _%>
     ]
 })
 export class NavbarComponent implements OnInit {
@@ -46,22 +46,40 @@ export class NavbarComponent implements OnInit {
     isNavbarCollapsed: boolean;
     languages: any[];
     swaggerEnabled: boolean;
-    <%_ if (authenticationType !== 'oauth2') { _%>
+<%_ if (authenticationType !== 'oauth2') { _%>
     modalRef: NgbModalRef;
-    <%_ } _%>
+<%_ } _%>
     version: string;
 
+    /**
+     * Creates an instance of NavbarComponent.
+     * @param {LoginService} loginService supplies login services (for user's authentication)
+<%_ if (enableTranslation) { _%>
+     * @param {JhiEventManager} eventManager handles events emition and subscription
+     * @param {JhiLanguageService} languageService handles language changes
+     * @param {JhiLanguageHelper} languageHelper helper for language handling
+     * @param {SessionStorageService} sessionStorage session storage to store user's data
+<%_ } _%>
+     * @param {Principal} principal represents user's identity and user's authentication state
+<%_ if (authenticationType !== 'oauth2') { _%>
+     * @param {LoginModalService} loginModalService supplies login modal services (for user's authentication)
+<%_ } _%>
+     * @param {ProfileService} profileService supplies profile info
+     * @param {Router} router to navigate in the different pages accessible from the navbar
+     * @param {NotificationService} notificationService supplies notifications services
+     * @memberof NavbarComponent
+     */
     constructor(
         private loginService: LoginService,
-        <%_ if (enableTranslation) { _%>
+<%_ if (enableTranslation) { _%>
         private languageService: JhiLanguageService,
         private languageHelper: JhiLanguageHelper,
         private sessionStorage: SessionStorageService,
-        <%_ } _%>
+<%_ } _%>
         private principal: Principal,
-        <%_ if (authenticationType !== 'oauth2') { _%>
+<%_ if (authenticationType !== 'oauth2') { _%>
         private loginModalService: LoginModalService,
-        <%_ } _%>
+<%_ } _%>
         private profileService: ProfileService,
         private router: Router
     ) {
@@ -69,6 +87,10 @@ export class NavbarComponent implements OnInit {
         this.isNavbarCollapsed = true;
     }
 
+    /**
+     * Called at the component initialization and get the different languages and the profile info
+     * @memberof NavbarComponent
+     */
     ngOnInit() {
         <%_ if (enableTranslation) { _%>
         this.languageHelper.getAll().then((languages) => {
@@ -82,21 +104,35 @@ export class NavbarComponent implements OnInit {
         });
     }
 
-    <%_ if (enableTranslation) { _%>
+<%_ if (enableTranslation) { _%>
+    /**
+     * Translate in the chosen language
+     * @param {string} languageKey key that represents the selected language
+     * @memberof NavbarComponent
+     */
     changeLanguage(languageKey: string) {
         this.sessionStorage.store('locale', languageKey);
         this.languageService.changeLanguage(languageKey);
     }
 
-    <%_ } _%>
+<%_ } _%>
     collapseNavbar() {
         this.isNavbarCollapsed = true;
     }
 
+    /**
+     * Return the result of user authentication
+     * @returns True if the user is authenticated, false otherwise
+     * @memberof NavbarComponent
+     */
     isAuthenticated() {
         return this.principal.isAuthenticated();
     }
 
+    /**
+     * Open the login modal
+     * @memberof NavbarComponent
+     */
     login() {
         <%_ if (authenticationType !== 'oauth2') { _%>
         this.modalRef = this.loginModalService.open();
@@ -105,6 +141,10 @@ export class NavbarComponent implements OnInit {
         <%_ } _%>
     }
 
+    /**
+     * Log the user out, end the notification service and navigate to 'welcome' page
+     * @memberof NavbarComponent
+     */
     logout() {
         this.collapseNavbar();
         this.loginService.logout();
@@ -115,6 +155,11 @@ export class NavbarComponent implements OnInit {
         this.isNavbarCollapsed = !this.isNavbarCollapsed;
     }
 
+    /**
+     * Return the user profile image if he or she is authenticated
+     * @returns the user profile image or null
+     * @memberof NavbarComponent
+     */
     getImageUrl() {
         return this.isAuthenticated() ? this.principal.getImageUrl() : null;
     }
