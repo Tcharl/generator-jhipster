@@ -23,28 +23,30 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button, <% if (searchEngine) { %>Input, InputGroup, FormGroup, Form, Row, Col, <% } %>Table } from 'reactstrap';
 import {
-  <%_ if (blobFields.length > 0) { _%>
-    <%_ if (fieldsContainBlobOrImage) { _%>
+<%_ if (blobFields.length > 0) { _%>
+  <%_ if (fieldsContainBlobOrImage) { _%>
   openFile,
-    <%_ } _%>
-  byteSize,
   <%_ } _%>
+  byteSize,
+<%_ } _%>
   Translate<% if (searchEngine) { %>, translate<% } %>
   <% if (fieldsContainDate) { %>, TextFormat<% } %>
-  <%_ if (!paginationNo) { _%>
+<%_ if (!paginationNo) { _%>
   , getSortState
   <%_ if (paginationPagination) { _%>
   , JhiPagination, JhiItemCount
-  <%_ }
-  } _%>
+  <%_ } _%>
+<%_ } _%>
 } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { APP_DATE_FORMAT, APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 <%_ if (!paginationNo) { _%>
-import { ASC, DESC, ITEMS_PER_PAGE, SORT } from 'app/shared/util/pagination.constants';
+import { ITEMS_PER_PAGE } from 'app/shared/util/pagination.constants';
 import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-utils';
 <%_ } _%>
+import { ASC, DESC, SORT } from 'app/shared/util/navigation.constants';
+
 import { useAppDispatch, useAppSelector } from 'app/config/store';
 <%_ if (fieldsContainDuration) { _%>
 import { DurationFormat } from 'app/shared/DurationFormat';
@@ -73,53 +75,55 @@ export const <%= entityReactName %> = () => {
 <%_ if (!paginationNo) { _%>
   const [paginationState, setPaginationState] = useState(overridePaginationStateWithQueryParams(getSortState(location, ITEMS_PER_PAGE, '<%= primaryKey.name %>'), location.search));
 <%_ } _%>
-<%_ if (paginationInfiniteScroll) { _%>
   const [sorting, setSorting] = useState(false);
-<%_ } _%>
 
   const <%= entityInstance %>List = useAppSelector(state => state.<%= entityReactState %>.entities);
   const loading = useAppSelector(state => state.<%= entityReactState %>.loading);
-  <%_ if (!paginationNo) { _%>
+<%_ if (!paginationNo) { _%>
   const totalItems = useAppSelector(state => state.<%= entityReactState %>.totalItems);
-  <%_ } _%>
-  <%_ if (paginationInfiniteScroll) { _%>
+<%_ } _%>
+<%_ if (paginationInfiniteScroll) { _%>
   const links = useAppSelector(state => state.<%= entityReactState %>.links);
   const entity = useAppSelector(state => state.<%= entityReactState %>.entity);
   const updateSuccess = useAppSelector(state => state.<%= entityReactState %>.updateSuccess);
-  <%_ } _%>
+<%_ } _%>
 
-<%_ if (paginationPagination || paginationInfiniteScroll || !paginationNo && !paginationInfiniteScroll) { _%>
   const getAllEntities = () => {
-  <%_ if (searchEngine) { _%>
+<%_ if (searchEngine) { _%>
     if (search) {
       dispatch(
         searchEntities({
           query: search,
+  <%_ if (paginationInfiniteScroll || paginationPagination) { _%>
           page: paginationState.activePage - 1,
           size: paginationState.itemsPerPage,
+  <%_ } _%>
           sort: `${paginationState.sort},${paginationState.order}`
         })
       );
     } else {
       dispatch(
         getEntities({
+  <%_ if (paginationInfiniteScroll || paginationPagination) { _%>
           page: paginationState.activePage - 1,
           size: paginationState.itemsPerPage,
+  <%_ } _%>
           sort: `${paginationState.sort},${paginationState.order}`,
         })
       );
     }
-  <%_ } else { _%>
+<%_ } else { _%>
       dispatch(
         getEntities({
+  <%_ if (paginationInfiniteScroll || paginationPagination) { _%>
           page: paginationState.activePage - 1,
           size: paginationState.itemsPerPage,
+  <%_ } _%>
           sort: `${paginationState.sort},${paginationState.order}`,
         })
       );
-  <%_ } _%>
-  };
 <%_ } _%>
+  };
 
 <%_ if (paginationInfiniteScroll) { _%>
   const resetAll = () => {
@@ -132,15 +136,13 @@ export const <%= entityReactName %> = () => {
   };
 <%_ } _%>
 
-<%_ if (paginationNo || paginationInfiniteScroll) { _%>
   useEffect(() => {
-  <%_ if (!paginationNo) { _%>
+<%_ if (paginationInfiniteScroll) { _%>
     resetAll();
-  <%_ } else { _%>
+<%_ } else { _%>
     dispatch(getEntities({}));
-  <%_ } _%>
-  }, []);
 <%_ } _%>
+  }, []);
 
 <%_ if (searchEngine) { _%>
   const startSearching = (e) => {
@@ -153,17 +155,21 @@ export const <%= entityReactName %> = () => {
         ...paginationState,
         activePage: 1
       });
+  <%_ } _%>
       dispatch(
         searchEntities({
           query: search,
+  <%_ if (!paginationNo) { _%>
           page: paginationState.activePage - 1,
           size: paginationState.itemsPerPage,
+  <%_ } _%>
           sort: `${paginationState.sort},${paginationState.order}`,
         })
       );
-  <%_ } else { _%>
-      dispatch(searchEntities({query: search}));
-  <%_ } _%>
+      dispatch(searchEntities({
+        query: search,
+        sort: `${paginationState.sort},${paginationState.order}`
+      }));
     }
     e.preventDefault();
   };

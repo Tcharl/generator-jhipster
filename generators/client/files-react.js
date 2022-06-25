@@ -221,6 +221,7 @@ const files = {
         'shared/layout/password/password-strength-bar.tsx',
         // util
         'shared/util/date-utils.ts',
+        'shared/util/navigation.constants.ts',
         'shared/util/pagination.constants.ts',
         'shared/util/entity-utils.ts',
         // components
