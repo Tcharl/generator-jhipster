@@ -22,6 +22,7 @@ import { Button, Table, Badge } from 'reactstrap';
 import {
   Translate,
   TextFormat,
+  getPaginationState,
   JhiPagination,
   JhiItemCount,
   getSortState
@@ -29,8 +30,9 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { APP_DATE_FORMAT } from 'app/config/constants';
-import { ASC, DESC, ITEMS_PER_PAGE, SORT } from 'app/shared/util/pagination.constants';
-import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-utils';
+import { ITEMS_PER_PAGE } from 'app/shared/util/pagination.constants';
+import { ASC, DESC, SORT } from 'app/shared/util/navigation.constants';
+import { overridePaginationStateWithQueryParams, overrideSortStateWithQueryParams } from 'app/shared/util/entity-utils';
 import { getUsersAsAdmin, updateUser } from './user-management.reducer';
 import { useAppDispatch, useAppSelector } from 'app/config/store';
 
@@ -40,19 +42,23 @@ export const UserManagement = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [pagination, setPagination] = useState(
-    overridePaginationStateWithQueryParams(getSortState(location, ITEMS_PER_PAGE, 'id'), location.search)
+  const [paginationState, setPaginationState] = useState(
+    overridePaginationStateWithQueryParams(getPaginationState(location, ITEMS_PER_PAGE), location.search)
+  );
+
+  const [sortState, setSortState] = useState(
+    overrideSortStateWithQueryParams(getSortState(location, 'id'), location.search)
   );
 
   const getUsersFromProps = () => {
     dispatch(
       getUsersAsAdmin({
-        page: pagination.activePage - 1,
-        size: pagination.itemsPerPage,
-        sort: `${pagination.sort},${pagination.order}`,
+        page: paginationState.activePage - 1,
+        size: paginationState.itemsPerPage,
+        sort: `${sortState.sort},${sortState.order}`,
       })
     );
-    const endURL = `?page=${pagination.activePage}&sort=${pagination.sort},${pagination.order}`;
+    const endURL = `?page=${paginationState.activePage}&sort=${sortState.sort},${sortState.order}`;
     if (location.search !== endURL) {
       navigate(`${location.pathname}${endURL}`);
     }
@@ -60,17 +66,25 @@ export const UserManagement = () => {
 
   useEffect(() => {
     getUsersFromProps();
-  }, [pagination.activePage, pagination.order, pagination.sort]);
+  }, [paginationState.activePage, sortState.order, sortState.sort]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const page = params.get('page');
+    if (page) {
+      setPaginationState({
+        ...paginationState,
+        activePage: +page
+      });
+    }
+  }, [location.search]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
     const sortParam = params.get(SORT);
-    if (page && sortParam) {
+    if (sortParam) {
       const sortSplit = sortParam.split(',');
-      setPagination({
-        ...pagination,
-        activePage: +page,
+      setSortState({
         sort: sortSplit[0],
         order: sortSplit[1]
       });
@@ -78,15 +92,14 @@ export const UserManagement = () => {
   }, [location.search]);
 
   const sort = p => () =>
-    setPagination({
-      ...pagination,
-      order: pagination.order === ASC ? DESC : ASC,
+    setSortState({
+      order: sortState.order === ASC ? DESC : ASC,
       sort: p
     });
 
   const handlePagination = currentPage =>
-    setPagination({
-      ...pagination,
+    setPaginationState({
+      ...paginationState,
       activePage: currentPage
     });
 
@@ -211,14 +224,14 @@ export const UserManagement = () => {
 <%_ if (!databaseTypeCassandra) { _%>
         { totalItems ? (<div className={ users?.length > 0 ? '' : 'd-none' }>
           <div className="justify-content-center d-flex">
-            <JhiItemCount page={pagination.activePage} total={totalItems} itemsPerPage={pagination.itemsPerPage} i18nEnabled />
+            <JhiItemCount page={paginationState.activePage} total={totalItems} itemsPerPage={paginationState.itemsPerPage} i18nEnabled />
           </div>
           <div className="justify-content-center d-flex">
             <JhiPagination
-              activePage={pagination.activePage}
+              activePage={paginationState.activePage}
               onSelect={handlePagination}
               maxButtons={5}
-              itemsPerPage={pagination.itemsPerPage}
+              itemsPerPage={paginationState.itemsPerPage}
               totalItems={totalItems}
             />
           </div>

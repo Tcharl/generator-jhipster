@@ -31,11 +31,10 @@ import {
 <%_ } _%>
   Translate<% if (searchEngine) { %>, translate<% } %>
   <% if (fieldsContainDate) { %>, TextFormat<% } %>
-<%_ if (!paginationNo) { _%>
   , getSortState
-  <%_ if (paginationPagination) { _%>
+<%_ if (paginationPagination || paginationInfiniteScroll) { _%>
+  , getPaginationState
   , JhiPagination, JhiItemCount
-  <%_ } _%>
 <%_ } _%>
 } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -43,8 +42,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { APP_DATE_FORMAT, APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 <%_ if (!paginationNo) { _%>
 import { ITEMS_PER_PAGE } from 'app/shared/util/pagination.constants';
-import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-utils';
 <%_ } _%>
+import {
+<%_ if (!paginationNo) { _%>
+  overridePaginationStateWithQueryParams,
+<%_ } _%>
+  overrideSortStateWithQueryParams
+} from 'app/shared/util/entity-utils';
 import { ASC, DESC, SORT } from 'app/shared/util/navigation.constants';
 
 import { useAppDispatch, useAppSelector } from 'app/config/store';
@@ -73,13 +77,16 @@ export const <%= entityReactName %> = () => {
   const [search, setSearch] = useState('');
 <%_ } _%>
 <%_ if (!paginationNo) { _%>
-  const [paginationState, setPaginationState] = useState(overridePaginationStateWithQueryParams(getSortState(location, ITEMS_PER_PAGE, '<%= primaryKey.name %>'), location.search));
+  const [paginationState, setPaginationState] = useState(overridePaginationStateWithQueryParams(getPaginationState(location, ITEMS_PER_PAGE), location.search));
 <%_ } _%>
+  const [sortState, setSortState] = useState(overrideSortStateWithQueryParams(getSortState(location, '<%= primaryKey.name %>'), location.search));
+<%_ if (paginationInfiniteScroll) { _%>
   const [sorting, setSorting] = useState(false);
+<%_ } _%>
 
   const <%= entityInstance %>List = useAppSelector(state => state.<%= entityReactState %>.entities);
   const loading = useAppSelector(state => state.<%= entityReactState %>.loading);
-<%_ if (!paginationNo) { _%>
+<%_ if (paginationPagination) { _%>
   const totalItems = useAppSelector(state => state.<%= entityReactState %>.totalItems);
 <%_ } _%>
 <%_ if (paginationInfiniteScroll) { _%>
@@ -98,7 +105,7 @@ export const <%= entityReactName %> = () => {
           page: paginationState.activePage - 1,
           size: paginationState.itemsPerPage,
   <%_ } _%>
-          sort: `${paginationState.sort},${paginationState.order}`
+          sort: `${sortState.sort},${sortState.order}`
         })
       );
     } else {
@@ -108,18 +115,16 @@ export const <%= entityReactName %> = () => {
           page: paginationState.activePage - 1,
           size: paginationState.itemsPerPage,
   <%_ } _%>
-          sort: `${paginationState.sort},${paginationState.order}`,
+          sort: `${sortState.sort},${sortState.order}`,
         })
       );
     }
-<%_ } else { _%>
+<%_ } else if (paginationInfiniteScroll) { _%>
       dispatch(
         getEntities({
-  <%_ if (paginationInfiniteScroll || paginationPagination) { _%>
           page: paginationState.activePage - 1,
           size: paginationState.itemsPerPage,
-  <%_ } _%>
-          sort: `${paginationState.sort},${paginationState.order}`,
+          sort: `${sortState.sort},${sortState.order}`,
         })
       );
 <%_ } _%>
@@ -163,12 +168,12 @@ export const <%= entityReactName %> = () => {
           page: paginationState.activePage - 1,
           size: paginationState.itemsPerPage,
   <%_ } _%>
-          sort: `${paginationState.sort},${paginationState.order}`,
+          sort: `${sortState.sort},${sortState.order}`,
         })
       );
       dispatch(searchEntities({
         query: search,
-        sort: `${paginationState.sort},${paginationState.order}`
+        sort: `${sortState.sort},${sortState.order}`
       }));
     }
     e.preventDefault();
@@ -215,8 +220,7 @@ export const <%= entityReactName %> = () => {
 <%_ if (!paginationNo) { _%>
   <%_ if (paginationPagination) { _%>
   const sortEntities = () => {
-    getAllEntities();
-    const endURL = `?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`;
+    const endURL = `?page=${paginationState.activePage}&sort=${sortState.sort},${sortState.order}`;
     if (location.search !== endURL) {
       navigate(`${location.pathname}${endURL}`);
     }
@@ -232,39 +236,29 @@ export const <%= entityReactName %> = () => {
   <%_ } else { _%>
     sortEntities();
   <%_ } _%>
-  }, [<% if (paginationInfiniteScroll) { %>sorting<% } else { %>paginationState.activePage, paginationState.order, paginationState.sort<% } %><%_ if (searchEngine) { _%>, search<% } %>]);
-
-  <%_ if (paginationPagination) { _%>
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const page = params.get('page');
-    const sort = params.get(SORT);
-    if (page && sort) {
-      const sortSplit = sort.split(',');
-      setPaginationState({
-        ...paginationState,
-        activePage: +page,
-        sort: sortSplit[0],
-        order: sortSplit[1]
-      });
-    }
-  }, [location.search]);
-  <%_ } _%>
+  }, [<% if (paginationInfiniteScroll) { %>sorting<% } else { %>paginationState.activePage, sortState.order, sortState.sort<% } %><%_ if (searchEngine) { _%>, search<% } %>]);
 
   const sort = p => () => {
   <%_ if (paginationInfiniteScroll) { _%>
     dispatch(reset());
     setPaginationState({
       ...paginationState,
-      activePage: 1,
-      order: paginationState.order === ASC ? DESC : ASC,
+      activePage: 1
+    });
+    setSortState({
+      ...sortState,
+      order: sortState.order === ASC ? DESC : ASC,
       sort: p
     });
     setSorting(true);
   <%_ } else { _%>
     setPaginationState({
       ...paginationState,
-      order: paginationState.order === ASC ? DESC : ASC,
+      activePage: 1
+    });
+    setSortState({
+      ...sortState,
+      order: sortState.order === ASC ? DESC : ASC,
       sort: p
     });
   <%_ } _%>
@@ -458,10 +452,10 @@ _%>
                             <FontAwesomeIcon icon="eye" /> <span className="d-none d-md-inline" ><Translate contentKey="entity.action.view">View</Translate></span>
                           </Button>
 <%_ if (!readOnly) { _%>
-                          <Button tag={Link} to={`/<%= entityPage %>/${<%= entityInstance %>.<%= primaryKey.name %>}/edit<%_ if (paginationPagination) { _%>?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}<%_ } _%>`} color="primary" size="sm" data-cy="entityEditButton">
+                          <Button tag={Link} to={`/<%= entityPage %>/${<%= entityInstance %>.<%= primaryKey.name %>}/edit<%_ if (paginationPagination) { _%>?page=${paginationState.activePage}&sort=${sortState.sort},${sortState.order}<%_ } _%>`} color="primary" size="sm" data-cy="entityEditButton">
                             <FontAwesomeIcon icon="pencil-alt" /> <span className="d-none d-md-inline"><Translate contentKey="entity.action.edit">Edit</Translate></span>
                           </Button>
-                          <Button tag={Link} to={`/<%= entityPage %>/${<%= entityInstance %>.<%= primaryKey.name %>}/delete<%_ if (paginationPagination) { _%>?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}<%_ } _%>`} color="danger" size="sm" data-cy="entityDeleteButton">
+                          <Button tag={Link} to={`/<%= entityPage %>/${<%= entityInstance %>.<%= primaryKey.name %>}/delete<%_ if (paginationPagination) { _%>?page=${paginationState.activePage}&sort=${sortState.sort},${sortState.order}<%_ } _%>`} color="danger" size="sm" data-cy="entityDeleteButton">
                             <FontAwesomeIcon icon="trash" /> <span className="d-none d-md-inline"><Translate contentKey="entity.action.delete">Delete</Translate></span>
                           </Button>
 <%_ } _%>
