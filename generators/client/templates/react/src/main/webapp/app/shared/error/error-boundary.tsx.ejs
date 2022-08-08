@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ErrorInfo } from 'react';
 
 interface IErrorBoundaryProps {
   readonly children: React.ReactNode;
@@ -12,7 +12,7 @@ interface IErrorBoundaryState {
 class ErrorBoundary extends React.Component<IErrorBoundaryProps, IErrorBoundaryState> {
   readonly state: IErrorBoundaryState = { error: undefined, errorInfo: undefined };
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({
       error,
       errorInfo

@@ -119,7 +119,7 @@ export const <%= entityReactName %> = () => {
         })
       );
     }
-<%_ } else if (paginationInfiniteScroll) { _%>
+<%_ } else if (paginationInfiniteScroll || paginationPagination) { _%>
       dispatch(
         getEntities({
           page: paginationState.activePage - 1,
@@ -141,13 +141,11 @@ export const <%= entityReactName %> = () => {
   };
 <%_ } _%>
 
-  useEffect(() => {
 <%_ if (paginationInfiniteScroll) { _%>
+  useEffect(() => {
     resetAll();
-<%_ } else { _%>
-    dispatch(getEntities({}));
-<%_ } _%>
   }, []);
+<%_ } _%>
 
 <%_ if (searchEngine) { _%>
   const startSearching = (e) => {
@@ -234,6 +232,7 @@ export const <%= entityReactName %> = () => {
       setSorting(false);
     }
   <%_ } else { _%>
+    getAllEntities();
     sortEntities();
   <%_ } _%>
   }, [<% if (paginationInfiniteScroll) { %>sorting<% } else { %>paginationState.activePage, sortState.order, sortState.sort<% } %><%_ if (searchEngine) { _%>, search<% } %>]);

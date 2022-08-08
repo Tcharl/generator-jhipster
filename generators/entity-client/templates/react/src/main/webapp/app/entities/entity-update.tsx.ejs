@@ -48,6 +48,7 @@ import { convertDateTimeFromServer, convertDateTimeToServer, displayDefaultDateT
 import { mapIdList } from 'app/shared/util/entity-utils';
 <%_ } _%>
 import { useAppDispatch, useAppSelector } from 'app/config/store';
+import { useForm } from 'react-hook-form';
 
 <%_
 let hasRelationshipQuery = false;
@@ -96,7 +97,7 @@ import { getEntities as get<%= upperFirstCamelCase(uniqueRel.otherEntityNamePlur
     <%_ } _%>
   <%_ } _%>
 <%_ }); _%>
-import { I<%= entityReactName %> } from 'app/shared/model/<%= entityModelFileName %>.model';
+
 <%_ const enumImports = generateEntityClientEnumImports(fields); _%>
 <%_ enumImports.forEach( (importedPath, importedType) => { _%>
 import { <%- importedType %> } from '<%- importedPath %>';
@@ -223,7 +224,17 @@ _%>
   <%_ } _%>
 <%_ }) _%>
         };
+  const form = useForm({ mode: 'onTouched', defaultValues: defaultValues() });
 
+  useEffect(() => {
+    form.reset(defaultValues());
+  }, [form.reset, defaultValues()]);
+<%_ for (field of fields.filter(field => !field.id)) { _%>
+  <%_ if (field.fieldTypeBinary && !field.blobContentTypeText) { _%>
+    const [<%= field.fieldName %>Blob, set<%= field.fieldName %>BlobData] = useState<string>(<%= entityInstance %>Entity.<%= field.fieldName %>);
+    const [<%= field.fieldName %>BlobContentType, set<%= field.fieldName %>BlobContentType] = useState<string>(<%= entityInstance %>Entity.<%= field.fieldName %>ContentType);
+  <%_ } _%>
+<%_ } _%>
   return (
     <div>
     <Row className="justify-content-center">
@@ -236,7 +247,7 @@ _%>
     <Row className="justify-content-center">
       <Col md="8">
         { loading ? <p>Loading...</p> :
-        <ValidatedForm defaultValues={defaultValues()} onSubmit={saveEntity} >
+        <ValidatedForm defaultValues={defaultValues()} onSubmit={saveEntity} form={form}>
           { !isNew ?
             <ValidatedField
               name="<%= primaryKey.fields[0].fieldName %>" required readOnly
@@ -296,11 +307,15 @@ _%>
           />
   <%_ } else if (field.fieldTypeBinary) { _%>
     <%_ if (!field.blobContentTypeText) {  _%>
-            <%_ if (field.blobContentTypeImage) {_%>
+            blob={<%= field.fieldName %>Blob}
+            setBlobData={set<%= field.fieldName %>BlobData}
+            blobContentType={<%= field.fieldName %>BlobContentType}
+            setBlobContentType={set<%= field.fieldName %>BlobContentType}
+      <%_ if (field.blobContentTypeImage) {_%>
             isImage accept="image/*"
-            <%_ } else { _%>
+      <%_ } else { _%>
             openActionLabel={translate('entity.action.open')}
-            <%_ } _%>
+      <%_ } _%>
             <%- include('react_validators'); %>
           />
     <%_ } else { _%>
